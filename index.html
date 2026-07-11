@@ -536,7 +536,7 @@
      GitHub Pages(정적 사이트)는 API 키를 안전하게 숨길 서버가 없어요.
      그래서 Cloudflare Worker 같은 작은 프록시 서버를 하나 두고, 그 서버 주소를 여기 넣어주세요.
      (같이 드린 worker.js 파일 + 안내를 참고해서 배포한 뒤, 아래 주소만 본인 것으로 바꾸면 돼요) */
-  var AI_WORKER_URL = 'lab-tracker-ai.jsb02076.workers.dev';
+  var AI_WORKER_URL = 'https://lab-tracker-ai.jsb02076.workers.dev/';
 
   var STORAGE_PREFIX = 'labCareerTracker:';
   function getLocal(key, fallback){
