@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAB CAREER TRACKER · 임상병리사 채용 관리</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FDF2F0;
+    --surface:#FFFFFF;
+    --surface-soft:#FBE2DF;
+    --ink:#3A2622;
+    --ink-soft:#9B7770;
+    --ink-faint:#D9B3AC;
+    --line:#F5DCD7;
+    --teal:#E28A82;
+    --teal-deep:#BF5449;
+    --teal-soft:#FBE2DF;
+    --amber:#C9860F;
+    --amber-soft:#FBEBD1;
+    --green:#2E7048;
+    --green-soft:#E4F3E9;
+    --red:#B84540;
+    --red-soft:#FBE1DE;
+    --violet:#B06E64;
+    --violet-soft:#F4E8E5;
+    --radius:10px;
+    --font-display:'Pretendard',-apple-system,sans-serif;
+    --font-body:'Pretendard',-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --shadow:0 1px 2px rgba(58,36,36,.06), 0 6px 20px rgba(58,36,36,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--teal-soft);color:var(--teal-deep);}
+
+  .app-shell{max-width:1220px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* ---------- Header ---------- */
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .brand-mark{display:flex;align-items:center;gap:12px;}
+  .brand-tube{
+    width:14px;height:38px;border-radius:7px;
+    background:linear-gradient(180deg,var(--teal) 0%, var(--teal) 62%, var(--surface) 62%, var(--surface) 100%);
+    border:1.5px solid var(--teal-deep);
+    flex-shrink:0;
+  }
+  .brand-text h1{
+    font-family:var(--font-mono);
+    font-size:20px;font-weight:600;letter-spacing:.02em;margin:0;color:var(--teal-deep);
+  }
+  .brand-text p{margin:2px 0 0;font-size:13px;color:var(--ink-soft);}
+  .stats-strip{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat-chip{
+    background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--teal);
+    border-radius:8px;padding:8px 14px;min-width:88px;box-shadow:var(--shadow);
+  }
+  .stat-chip .num{font-family:var(--font-mono);font-size:19px;font-weight:600;color:var(--ink);}
+  .stat-chip .lbl{font-size:11px;color:var(--ink-soft);letter-spacing:.02em;}
+  .stat-chip.urgent{border-left-color:var(--amber);}
+  .stat-chip.urgent .num{color:var(--amber);}
+
+  .ecg-divider{width:100%;height:22px;margin:18px 0 22px;opacity:.55;}
+  .ecg-divider path{fill:none;stroke:var(--teal);stroke-width:1.4;}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;}
+  .tab-btn{
+    font-family:var(--font-body);font-size:14px;font-weight:600;color:var(--ink-soft);
+    background:transparent;border:none;padding:9px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;
+    transition:background .15s, color .15s;
+  }
+  .tab-btn:hover{background:var(--surface-soft);}
+  .tab-btn.active{background:var(--teal);color:#fff;}
+
+  .subtabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+  .subtab-btn{
+    font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--ink-soft);
+    background:var(--surface-soft);border:none;padding:7px 13px;border-radius:20px;cursor:pointer;
+  }
+  .subtab-btn.active{background:var(--teal-deep);color:#fff;}
+  .subview{display:none;}
+  .subview.active{display:block;animation:fadein .18s ease;}
+
+  .view{display:none;}
+  .view.active{display:block;animation:fadein .18s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* ---------- Cards / buttons ---------- */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+  .panel-pad{padding:18px;}
+  .btn{
+    font-family:var(--font-body);font-size:13px;font-weight:600;border-radius:7px;padding:8px 14px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;
+    transition:filter .15s, background .15s;
+  }
+  .btn:hover{filter:brightness(.97);}
+  .btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-deep);}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--teal-deep);}
+  .btn-danger{background:transparent;border-color:var(--red);color:var(--red);}
+  .btn-danger:hover{background:var(--red-soft);}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  label{font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px;}
+  input[type=text],input[type=date],input[type=url],select,textarea{
+    width:100%;font-family:var(--font-body);font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:7px;padding:9px 10px;background:#fff;
+  }
+  textarea{resize:vertical;min-height:90px;font-family:var(--font-body);line-height:1.55;}
+  .field{margin-bottom:14px;}
+  .field-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .field-row > .field{flex:1;min-width:150px;}
+
+  .label-chip{
+    font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 8px;border-radius:5px;border-left:3px solid currentColor;display:inline-flex;align-items:center;gap:4px;
+  }
+
+  /* ---------- Calendar ---------- */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .cal-title{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--teal-deep);}
+  .cal-nav{display:flex;gap:6px;align-items:center;}
+
+  .cal-layout{display:grid;grid-template-columns:1fr 270px;gap:18px;align-items:start;}
+  .cal-main{min-width:0;}
+
+  .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;}
+  .cal-dow{text-align:center;font-size:12.5px;font-weight:700;color:var(--ink-faint);padding-bottom:4px;}
+
+  .cal-week{position:relative;margin-bottom:5px;}
+  .cal-week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:0;}
+  .cal-daybox{
+    border:1px solid var(--line);background:#fff;padding:7px 9px;cursor:pointer;
+    transition:background .15s;
+  }
+  .cal-daybox:hover{background:var(--surface-soft);}
+  .cal-daybox.out-of-month{background:transparent;border-color:transparent;cursor:default;}
+  .cal-daybox.out-of-month:hover{background:transparent;}
+  .cal-daybox.today{background:var(--teal-soft);}
+  .cal-daynum{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .cal-daybox.out-of-month .cal-daynum{color:var(--ink-faint);opacity:.5;}
+  .cal-daybox.today .cal-daynum{color:var(--teal-deep);font-weight:700;}
+
+  .cal-bar-layer{position:absolute;left:0;right:0;top:28px;pointer-events:none;}
+  .cal-bar{
+    position:absolute;height:19px;border-radius:5px;font-size:11.5px;color:#fff;
+    padding:0 6px;line-height:19px;overflow:hidden;white-space:nowrap;
+    pointer-events:auto;cursor:pointer;background:var(--teal);font-weight:600;
+  }
+  .cal-bar.urgent-bar{background:var(--amber);}
+
+  .cal-aside{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;box-shadow:var(--shadow);position:sticky;top:16px;
+  }
+  .urgent-header{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--teal-deep);margin-bottom:10px;letter-spacing:.02em;}
+  .urgent-card{
+    border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;
+    padding:9px 10px;margin-bottom:8px;background:#fff;cursor:pointer;transition:border-color .15s;
+  }
+  .urgent-card:hover{border-color:var(--amber);}
+  .urgent-hospital{font-size:12.5px;font-weight:700;}
+  .urgent-jobtitle{font-size:11px;color:var(--ink-soft);margin:2px 0 6px;line-height:1.4;}
+  .urgent-dday{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--amber);}
+
+  /* ---------- Applications ---------- */
+  .app-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .filter-chip{
+    font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+    border-radius:20px;padding:6px 12px;cursor:pointer;
+  }
+  .filter-chip.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .app-card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+  .app-card-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+  .app-hospital{font-size:15px;font-weight:700;}
+  .app-meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .app-body{margin-top:12px;}
+  .app-body summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--teal-deep);list-style:none;}
+  .app-body summary::-webkit-details-marker{display:none;}
+  .app-body summary:before{content:"▸ ";}
+  .app-body[open] summary:before{content:"▾ ";}
+  .app-textarea-wrap{margin-top:10px;}
+  .save-hint{font-size:11px;color:var(--ink-faint);margin-top:6px;}
+
+  /* ---------- Hospitals ---------- */
+  .hosp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hosp-row{
+    border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:#fff;
+    display:flex;flex-direction:column;
+  }
+  .hosp-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+  .hosp-name-line{display:flex;align-items:center;gap:7px;min-width:0;}
+  .hosp-name{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hosp-tags{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .hosp-note{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .hosp-row .btn-row{gap:5px;}
+  .hosp-row .btn-sm{padding:4px 8px;font-size:11px;}
+  .color-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.12);}
+  input[type=color]{
+    -webkit-appearance:none;appearance:none;width:36px;height:32px;padding:2px;
+    border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;
+  }
+  input[type=color]::-webkit-color-swatch-wrapper{padding:0;}
+  input[type=color]::-webkit-color-swatch{border:none;border-radius:5px;}
+  .color-field-row{display:flex;align-items:center;gap:10px;}
+  .color-field-row input[type=text]{flex:1;}
+
+  @media(max-width:760px){
+    .hosp-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Calendar legend ---------- */
+  .cal-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:0 0 14px;padding:10px 12px;background:var(--surface-soft);border-radius:8px;}
+  .cal-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);}
+
+  /* ---------- Review queue ---------- */
+  .queue-card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;}
+  .queue-main{flex:1;min-width:200px;}
+  .queue-hospital{font-weight:700;font-size:13.5px;}
+  .queue-title{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+  .queue-dates{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-top:4px;}
+  .auto-box{border:1px dashed var(--teal);border-radius:10px;padding:14px;margin-bottom:16px;background:var(--teal-soft);}
+  .auto-box p{margin:0 0 10px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;}
+
+  /* ---------- Import ---------- */
+  .import-help{font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:12px;}
+  .import-help code{background:var(--surface-soft);padding:1px 5px;border-radius:4px;font-family:var(--font-mono);font-size:12px;}
+  pre.sample{
+    background:var(--ink);color:#F6DEE1;font-family:var(--font-mono);font-size:12px;line-height:1.6;
+    padding:14px;border-radius:8px;overflow-x:auto;margin:10px 0 16px;
+  }
+  .import-result{margin-top:10px;font-size:13px;font-weight:600;}
+  .import-result.ok{color:var(--green);}
+  .import-result.err{color:var(--red);}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(58,36,36,.42);display:none;align-items:center;justify-content:center;
+    padding:20px;z-index:50;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;
+    padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);
+  }
+  .modal h3{margin:0 0 14px;font-size:17px;font-family:var(--font-mono);color:var(--teal-deep);}
+  .modal-close-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+
+  .empty-state{padding:40px 20px;text-align:center;color:var(--ink-faint);font-size:13px;}
+
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;
+    opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  a.plainlink{color:var(--teal-deep);text-decoration:none;font-weight:600;}
+  a.plainlink:hover{text-decoration:underline;}
+
+  /* ---------- Chat ---------- */
+  .chat-context-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;}
+  .chat-context-row .field{flex:1;min-width:200px;margin-bottom:0;}
+  .chat-window{
+    background:var(--surface-soft);border:1px solid var(--line);border-radius:12px;
+    padding:16px;min-height:340px;max-height:480px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;
+  }
+  .chat-bubble{max-width:78%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6;white-space:pre-wrap;}
+  .chat-bubble.user{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:4px;}
+  .chat-bubble.assistant{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:4px;}
+  .chat-bubble.pending{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink-faint);font-style:italic;}
+  .chat-input-row{display:flex;gap:8px;margin-top:12px;align-items:flex-end;}
+  .chat-input-row textarea{flex:1;min-height:56px;max-height:140px;}
+  .chat-empty{color:var(--ink-faint);font-size:13px;text-align:center;margin:auto;}
+
+  @media(max-width:640px){
+    .cal-layout{grid-template-columns:1fr;}
+    .cal-aside{order:-1;position:static;margin-bottom:14px;}
+    .app-card-top{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="topbar">
+    <div class="brand-mark">
+      <div class="brand-tube"></div>
+      <div class="brand-text">
+        <h1>LAB CAREER TRACKER</h1>
+        <p>임상병리사 · 진단검사의학과 채용 관리 캘린더</p>
+      </div>
+    </div>
+    <div class="stats-strip" id="statsStrip"></div>
+  </div>
+
+  <svg class="ecg-divider" viewBox="0 0 800 22" preserveAspectRatio="none">
+    <path d="M0,11 L220,11 L245,11 L258,2 L272,20 L286,11 L310,11 L800,11" />
+  </svg>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="calendar">📅 캘린더</button>
+    <button class="tab-btn" data-tab="applications">📋 지원현황</button>
+    <button class="tab-btn" data-tab="hospitals">🏥 병원목록</button>
+    <button class="tab-btn" data-tab="posting">📥 공고 등록</button>
+    <button class="tab-btn" data-tab="chat">💬 AI 상담</button>
+    <button class="tab-btn" data-tab="backup">💾 백업</button>
+  </div>
+
+  <!-- ================= CALENDAR ================= -->
+  <div class="view active" id="view-calendar">
+    <div class="cal-layout">
+      <div class="panel panel-pad cal-main">
+        <div class="cal-head">
+          <div class="cal-nav">
+            <button class="btn btn-sm" id="calPrev">‹ 이전달</button>
+            <div class="cal-title" id="calTitle"></div>
+            <button class="btn btn-sm" id="calNext">다음달 ›</button>
+            <button class="btn btn-sm btn-ghost" id="calToday">오늘</button>
+          </div>
+          <button class="btn btn-primary btn-sm" id="calAddBtn">+ 공고 직접 추가</button>
+        </div>
+        <div class="cal-dow-row" id="calDowRow"></div>
+        <div id="calWeeks"></div>
+      </div>
+      <aside class="cal-aside">
+        <div class="urgent-header">⏰ 마감임박 · 지금 지원해야 해요</div>
+        <div id="urgentList"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ================= APPLICATIONS ================= -->
+  <div class="view" id="view-applications">
+    <div class="panel panel-pad">
+      <div class="cal-head">
+        <div class="app-filters" id="appFilters"></div>
+        <button class="btn btn-primary btn-sm" id="appAddBtn">+ 새 지원 추가</button>
+      </div>
+      <div id="appList"></div>
+    </div>
+  </div>
+
+  <!-- ================= HOSPITALS ================= -->
+  <div class="view" id="view-hospitals">
+    <div class="panel panel-pad">
+      <div class="cal-head">
+        <div class="cal-title" style="font-size:15px;">등록된 병원 (<span id="hospCount">0</span>)</div>
+        <button class="btn btn-primary btn-sm" id="hospAddBtn">+ 병원 추가</button>
+      </div>
+      <div id="hospList" class="hosp-grid"></div>
+    </div>
+  </div>
+
+  <!-- ================= POSTING (auto-search + paste, merged) ================= -->
+  <div class="view" id="view-posting">
+    <div class="panel panel-pad">
+      <div class="subtabs" id="postingSubtabs">
+        <button class="subtab-btn active" data-subtab="auto">🔍 자동검색</button>
+        <button class="subtab-btn" data-subtab="paste">✂️ 직접 붙여넣기</button>
+      </div>
+
+      <div class="subview active" id="subview-auto">
+        <div class="auto-box">
+          <p>
+            버튼을 누르면 <b>등록된 병원 이름을 담은 검색 요청 문구</b>가 클립보드에 복사돼요.
+            이 사이트 자체는 병원 사이트를 자동으로 긁어올 수 없어서, 복사된 문구를 <a class="plainlink" href="https://claude.ai" target="_blank" rel="noopener">Claude.ai</a>나 다른 AI 챗봇에 붙여넣어 검색을 부탁한 다음,
+            돌아온 JSON 코드를 아래 상자에 붙여넣으면 <b>등록 대기열</b>에서 확인 후 캘린더에 추가할 수 있어요.
+          </p>
+          <button class="btn btn-primary btn-sm" id="autoSearchBtn">🔍 검색 요청 문구 복사하기</button>
+          <div class="field" style="margin-top:14px;">
+            <label for="queueImportArea">검색 결과 JSON 붙여넣기</label>
+            <textarea id="queueImportArea" placeholder='[{"hospital":"...","date":"...","title":"...","deadline":"...","link":"...","memo":"..."}]' style="min-height:100px;font-family:var(--font-mono);font-size:12px;"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-sm" id="queueImportBtn">대기열에 담기</button>
+            <button class="btn btn-ghost btn-sm" id="queueImportClearBtn">비우기</button>
+          </div>
+          <div id="queueImportResult" style="margin-top:8px;font-size:12.5px;font-weight:600;"></div>
+        </div>
+
+        <div class="cal-title" style="font-size:14px;margin-bottom:8px;">등록 대기열 (<span id="queueCount">0</span>)</div>
+        <div id="reviewQueueList"></div>
+      </div>
+
+      <div class="subview" id="subview-paste">
+        <div class="import-help">
+          병원 채용 페이지에서 공고 내용을 그대로 복사해서 아래에 붙여넣으세요 (제목, 날짜, 마감일, 자격요건 등 뭐든 섞여 있어도 괜찮아요).
+          <b>자동 분석</b>을 누르면 AI가 병원명·날짜·마감일을 알아서 뽑아내고, 확인/수정할 수 있는 창을 띄워줘요. 거기서 저장을 눌러야 캘린더에 반영돼요.
+        </div>
+        <div class="field">
+          <label for="pasteArea">채용공고 텍스트</label>
+          <textarea id="pasteArea" style="min-height:180px;" placeholder="여기에 공고 내용을 그대로 붙여넣으세요"></textarea>
+        </div>
+        <div class="field">
+          <label for="pasteLink">공고 링크(선택, 있으면 정확도가 올라가요)</label>
+          <input type="url" id="pasteLink" placeholder="https://...">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="pasteAnalyzeBtn">자동 분석</button>
+          <button class="btn btn-ghost" id="pasteClearBtn">비우기</button>
+        </div>
+        <div id="pasteResult" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= AI CHAT / CONSULTING ================= -->
+  <div class="view" id="view-chat">
+    <div class="panel panel-pad">
+      <div class="cal-title" style="font-size:15px;margin-bottom:12px;">면접·자소서 상담</div>
+      <div class="chat-context-row">
+        <div class="field">
+          <label for="chatContext">이야기할 지원 건 선택 (선택사항)</label>
+          <select id="chatContext"><option value="">— 특정 건 없이 일반 상담 —</option></select>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="chatClearBtn">대화 초기화</button>
+      </div>
+      <div class="chat-window" id="chatWindow">
+        <div class="chat-empty">병원별 자소서나 면접 복기를 골라서 "여기 피드백 좀 줘" 처럼 물어보세요. 그냥 편하게 이야기해도 돼요.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="예: 이번 면접에서 왜 떨어졌을지 같이 생각해볼래?"></textarea>
+        <button class="btn btn-primary" id="chatSendBtn">보내기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BACKUP / RESTORE ================= -->
+  <div class="view" id="view-backup">
+    <div class="panel panel-pad">
+      <div class="cal-title" style="font-size:15px;margin-bottom:10px;">데이터 백업 · 복원</div>
+      <div class="import-help">
+        병원목록·공고·지원현황·자소서·면접복기·대기열 데이터를 통째로 파일 하나로 내려받을 수 있어요.
+        <b>제가 큰 수정을 하기 전에는 항상 먼저 백업 다운로드를 받아두시는 걸 권장드려요.</b>
+        복원은 백업 파일을 선택하면 현재 데이터를 덮어써요 (되돌릴 수 없으니 신중하게 진행해주세요).
+      </div>
+      <div class="btn-row" style="margin-bottom:18px;">
+        <button class="btn btn-primary" id="backupDownloadBtn">⬇️ 전체 데이터 백업 다운로드</button>
+      </div>
+      <div class="field">
+        <label for="backupFileInput">백업 파일로 복원</label>
+        <input type="file" id="backupFileInput" accept="application/json">
+      </div>
+      <div id="backupResult" style="margin-top:8px;font-size:12.5px;font-weight:600;"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- constants ---------------- */
+  var STATUS_LIST = ['관심등록','서류접수','서류합격','면접예정','최종합격','불합격','보류'];
+  var STATUS_META = {
+    '관심등록': {c:'#6E5457', bg:'#F3E7E8'},
+    '서류접수': {c:'#A63F53', bg:'#F8E2E6'},
+    '서류합격': {c:'#7E2A3D', bg:'#F3D3D9'},
+    '면접예정': {c:'#C9860F', bg:'#FBEBD1'},
+    '최종합격': {c:'#2E7048', bg:'#E4F3E9'},
+    '불합격':   {c:'#A83E37', bg:'#FBE8E6'},
+    '보류':     {c:'#8C5B7C', bg:'#F0E5EF'}
+  };
+  var DOW = ['일','월','화','수','목','금','토'];
+
+  var COLOR_PALETTE = [
+    '#E8637F','#C9860F','#5B9BD5','#2E9B6B','#9C6B94',
+    '#D9772F','#4E8FA6','#B85C5C','#7A9E4E','#8C6BC9',
+    '#D6547A','#3E9C8F','#C2884A','#6E7FC9','#B0784E',
+    '#5C9C6E','#A65C9E','#4E9CB0','#C97A54','#7A6EC9'
+  ];
+  function nextPaletteColor(index){ return COLOR_PALETTE[index % COLOR_PALETTE.length]; }
+
+  var DEFAULT_HOSPITALS = [
+    {id:'h01',name:'한림대학교의료원',region:'경기',category:'대학병원',link:'https://recruit.hallym.or.kr/',note:'',color:COLOR_PALETTE[0]},
+    {id:'h02',name:'CHA의료원(차의과학대학교)',region:'경기',category:'대학병원',link:'https://recruit.chamc.co.kr/page.ckd',note:'',color:COLOR_PALETTE[1]},
+    {id:'h03',name:'순천향대학교부속병원',region:'서울',category:'대학병원',link:'https://jobapplication.schmc.ac.kr/',note:'',color:COLOR_PALETTE[2]},
+    {id:'h04',name:'을지대학교병원',region:'경기',category:'대학병원',link:'https://uemc.ac.kr/info/info_pg06_04.jsp',note:'',color:COLOR_PALETTE[3]},
+    {id:'h05',name:'건국대학교병원',region:'서울',category:'대학병원',link:'https://www.kuh.ac.kr/m/recruit/main.do',note:'',color:COLOR_PALETTE[4]},
+    {id:'h06',name:'이대목동병원',region:'서울',category:'대학병원',link:'https://mokdong.eumc.ac.kr/intro/recrut/list.do',note:'',color:COLOR_PALETTE[5]},
+    {id:'h07',name:'중앙대학교병원',region:'서울',category:'대학병원',link:'https://caumc.recruiter.co.kr/career/job',note:'',color:COLOR_PALETTE[6]},
+    {id:'h08',name:'경희의료원',region:'서울',category:'대학병원',link:'https://recruit.incruit.com/khmc/',note:'',color:COLOR_PALETTE[7]},
+    {id:'h09',name:'가톨릭대학교 성모병원(성모의료연합)',region:'경기·서울',category:'대학병원',link:'https://www.cmcsungmo.or.kr/page/board/recruit?p=1&s=12&q=%7B%7D',note:'',color:COLOR_PALETTE[8]},
+    {id:'h10',name:'한양대학교병원',region:'서울',category:'대학병원',link:'https://hyumc.recruiter.co.kr/career/home',note:'',color:COLOR_PALETTE[9]},
+    {id:'h11',name:'잡코리아(임상병리사 검색)',region:'전체',category:'채용포털',link:'https://www.jobkorea.co.kr/Search/?stext=%EC%9E%84%EC%83%81%EB%B3%91%EB%A6%AC%EC%82%AC&tabType=recruit&duty=1000382&dkwrd=10003772062',note:'',color:COLOR_PALETTE[10]},
+    {id:'h12',name:'인천성모병원',region:'인천',category:'대학병원',link:'https://cmcism.recruiter.co.kr/career/home',note:'',color:COLOR_PALETTE[11]},
+    {id:'h13',name:'고려대학교의료원',region:'서울',category:'대학병원',link:'https://kumc.recruiter.co.kr/career/career',note:'',color:COLOR_PALETTE[12]},
+    {id:'h14',name:'이대서울병원',region:'서울',category:'대학병원',link:'https://seoul.eumc.ac.kr/intro/recrut/list.do?bid_status=I',note:'',color:COLOR_PALETTE[13]},
+    {id:'h15',name:'인하대학교병원',region:'인천',category:'대학병원',link:'https://inhauh.recruiter.co.kr/app/jobnotice/list',note:'',color:COLOR_PALETTE[14]},
+    {id:'h16',name:'분당서울대학교병원',region:'경기',category:'상급종합병원',link:'https://snubh.recruiter.co.kr/app/jobnotice/list',note:'',color:COLOR_PALETTE[15]},
+    {id:'h17',name:'연세의료원',region:'서울',category:'대학병원',link:'https://yuhs.recruiter.co.kr/app/jobnotice/list',note:'',color:COLOR_PALETTE[16]},
+    {id:'h18',name:'서울아산병원',region:'서울',category:'상급종합병원',link:'https://recruit.amc.seoul.kr/recruit/main.do',note:'',color:COLOR_PALETTE[17]},
+    {id:'h19',name:'가톨릭대학교 서울성모병원',region:'서울',category:'대학병원',link:'https://recruit.cmcnu.or.kr/cmcseoul/index.do',note:'',color:COLOR_PALETTE[18]},
+    {id:'h20',name:'삼성서울병원',region:'서울',category:'상급종합병원',link:'https://www.samsunghospital.com/home/recruit/recruitInfo/recruitNotice.do',note:'',color:COLOR_PALETTE[19]}
+  ];
+
+  /* ---------------- state ---------------- */
+  var hospitals = [];
+  var postings = [];
+  var applications = [];
+  var appFilter = '전체';
+  var reviewQueue = [];
+  var today = new Date();
+  var calYear = today.getFullYear();
+  var calMonth = today.getMonth() + 1; // 1-12
+
+  /* ---------------- storage helpers ---------------- */
+  function uid(prefix){
+    return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+  function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+  function fmtDate(y,m,d){ return y + '-' + pad2(m) + '-' + pad2(d); }
+
+  /* ---------------- AI proxy config ----------------
+     GitHub Pages(정적 사이트)는 API 키를 안전하게 숨길 서버가 없어요.
+     그래서 Cloudflare Worker 같은 작은 프록시 서버를 하나 두고, 그 서버 주소를 여기 넣어주세요.
+     (같이 드린 worker.js 파일 + 안내를 참고해서 배포한 뒤, 아래 주소만 본인 것으로 바꾸면 돼요) */
+  var AI_WORKER_URL = 'https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev';
+
+  var STORAGE_PREFIX = 'labCareerTracker:';
+  function getLocal(key, fallback){
+    try{
+      var raw = localStorage.getItem(STORAGE_PREFIX + key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function setLocal(key, value){
+    try{
+      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+      return true;
+    }catch(e){
+      showToast('저장 중 오류가 발생했어요 (브라우저 저장공간이 꽉 찼을 수 있어요)');
+      return false;
+    }
+  }
+  async function getData(key, fallback){
+    return getLocal(key, fallback);
+  }
+  async function setData(key, value){
+    var ok = setLocal(key, value);
+    if(!ok){ showToast('저장 실패: 다시 시도해주세요'); }
+    return ok ? {key:key, value:value} : null;
+  }
+
+  async function saveHospitals(){ await setData('hospitals-data', hospitals); }
+
+  /* Calls your Cloudflare Worker (see worker.js), which forwards to Gemini.
+     messages: [{role:'user'|'assistant', content:'...'}], system: string
+     Returns the reply text, or throws on failure. */
+  async function callAI(system, messages){
+    if(!AI_WORKER_URL || AI_WORKER_URL.indexOf('YOUR-WORKER-NAME') !== -1){
+      throw new Error('worker_not_configured');
+    }
+    var response = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: system, messages: messages })
+    });
+    if(!response.ok){ throw new Error('worker_error_' + response.status); }
+    var data = await response.json();
+    if(data.error){ throw new Error(data.error); }
+    return (data.text || '').trim();
+  }
+  async function savePostings(){ await setData('postings-data', postings); }
+  async function saveApplications(){ await setData('applications-data', applications); }
+
+  /* ---------------- toast ---------------- */
+  var toastTimer = null;
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------------- modal ---------------- */
+  function openModal(html){
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalBackdrop').classList.add('open');
+  }
+  function closeModal(){
+    document.getElementById('modalBackdrop').classList.remove('open');
+    document.getElementById('modalBody').innerHTML = '';
+  }
+  document.getElementById('modalBackdrop').addEventListener('click', function(e){
+    if(e.target.id === 'modalBackdrop') closeModal();
+  });
+
+  function hospitalOptions(selectedId){
+    return hospitals.map(function(h){
+      return '<option value="'+h.id+'"'+(h.id===selectedId?' selected':'')+'>'+escapeHtml(h.name)+'</option>';
+    }).join('');
+  }
+  function hospitalById(id){
+    for(var i=0;i<hospitals.length;i++){ if(hospitals[i].id===id) return hospitals[i]; }
+    return null;
+  }
+  function escapeHtml(s){
+    if(s===undefined || s===null) return '';
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function daysUntil(dateStr){
+    if(!dateStr) return null;
+    var target = new Date(dateStr+'T00:00:00');
+    var now = new Date(); now.setHours(0,0,0,0);
+    return Math.round((target - now) / 86400000);
+  }
+
+  /* ================= TABS ================= */
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('view-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.subtab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.subtab-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.subview').forEach(function(v){ v.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('subview-'+btn.dataset.subtab).classList.add('active');
+    });
+  });
+
+  /* ================= STATS ================= */
+  function renderStats(){
+    var active = applications.filter(function(a){
+      return a.status !== '최종합격' && a.status !== '불합격';
+    }).length;
+    var soon = postings.filter(function(p){
+      if(!p.deadline) return false;
+      var d = daysUntil(p.deadline);
+      return d !== null && d >= 0 && d <= 7;
+    }).length;
+    var passed = applications.filter(function(a){ return a.status === '최종합격'; }).length;
+
+    var html = '';
+    html += statChip(applications.length, '총 지원', false);
+    html += statChip(active, '진행중', false);
+    html += statChip(soon, '마감임박(7일)', true);
+    html += statChip(passed, '최종합격', false);
+    document.getElementById('statsStrip').innerHTML = html;
+  }
+  function statChip(num, lbl, urgent){
+    return '<div class="stat-chip'+(urgent && num>0 ? ' urgent':'')+'"><div class="num">'+num+'</div><div class="lbl">'+lbl+'</div></div>';
+  }
+
+  /* ================= CALENDAR ================= */
+  function parseDate(s){
+    var parts = s.split('-');
+    return new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+  }
+  function addDays(dateObj, n){
+    var d = new Date(dateObj.getTime());
+    d.setDate(d.getDate()+n);
+    return d;
+  }
+  function diffDays(a, b){
+    return Math.round((b - a) / 86400000);
+  }
+
+  function renderCalendar(){
+    var titleEl = document.getElementById('calTitle');
+    titleEl.textContent = calYear + '년 ' + calMonth + '월';
+
+    document.getElementById('calDowRow').innerHTML = DOW.map(function(d){ return '<div class="cal-dow">'+d+'</div>'; }).join('');
+
+    var firstOfMonth = new Date(calYear, calMonth-1, 1);
+    var lastOfMonth = new Date(calYear, calMonth, 0);
+    var gridStart = addDays(firstOfMonth, -firstOfMonth.getDay());
+    var gridEnd = addDays(lastOfMonth, 6 - lastOfMonth.getDay());
+
+    var todayStr = fmtDate(today.getFullYear(), today.getMonth()+1, today.getDate());
+
+    // build postings with resolved start/end Date objects
+    var items = postings.map(function(p){
+      var start = parseDate(p.date);
+      var end = p.deadline ? parseDate(p.deadline) : start;
+      if(end < start) end = start;
+      return {posting:p, start:start, end:end};
+    });
+
+    var weeksHtml = '';
+    var cursor = gridStart;
+    while(cursor <= gridEnd){
+      var weekStart = cursor;
+      var weekEnd = addDays(cursor, 6);
+
+      // bars overlapping this week (compute first so we know row height)
+      var weekItems = items.filter(function(it){ return it.start <= weekEnd && it.end >= weekStart; });
+      weekItems.sort(function(a,b){ return a.start - b.start; });
+      var lanes = []; // each lane holds the end-col of last placed bar
+      var placed = weekItems.map(function(it){
+        var startCol = Math.max(0, diffDays(weekStart, it.start));
+        var endCol = Math.min(6, diffDays(weekStart, it.end));
+        var lane = -1;
+        for(var L=0; L<lanes.length; L++){
+          if(lanes[L] < startCol){ lane = L; break; }
+        }
+        if(lane === -1){ lane = lanes.length; lanes.push(endCol); }
+        else { lanes[lane] = endCol; }
+        return {it:it, startCol:startCol, endCol:endCol, lane:lane};
+      });
+      var maxLanes = lanes.length;
+      var weekMinHeight = Math.max(86, 34 + Math.max(1, maxLanes) * 21 + 12);
+
+      // days for this week
+      var daysHtml = '';
+      for(var i=0;i<7;i++){
+        var d = addDays(weekStart, i);
+        var dateStr = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        var inMonth = (d.getMonth()+1 === calMonth) && (d.getFullYear() === calYear);
+        var isToday = dateStr === todayStr;
+        daysHtml += '<div class="cal-daybox'+(inMonth?'':' out-of-month')+(isToday?' today':'')+'" style="min-height:'+weekMinHeight+'px;" data-date="'+dateStr+'" data-inmonth="'+(inMonth?'1':'0')+'">'
+          + '<div class="cal-daynum">'+d.getDate()+'</div></div>';
+      }
+
+      var barsHtml = placed.map(function(pl){
+        var p = pl.it.posting;
+        var h = hospitalById(p.hospitalId);
+        var name = h ? h.name : (p.hospitalName || '(미상)');
+        var color = h && h.color ? h.color : 'var(--teal)';
+        var dday = p.deadline ? daysUntil(p.deadline) : null;
+        var isUrgent = dday !== null && dday >= 0 && dday <= 3;
+        var widthPct = ((pl.endCol - pl.startCol + 1) / 7) * 100;
+        var leftPct = (pl.startCol / 7) * 100;
+        var urgentOutline = isUrgent ? ('box-shadow:0 0 0 2px '+color+', 0 0 0 4px var(--amber);') : '';
+        return '<div class="cal-bar" '
+          + 'style="left:calc('+leftPct+'% + 2px);width:calc('+widthPct+'% - 4px);top:'+(pl.lane*21)+'px;background:'+color+';'+urgentOutline+'" '
+          + 'data-posting-id="'+p.id+'" title="'+escapeHtml(name+' · '+p.title)+(isUrgent?' · 마감임박':'')+'">'+(isUrgent?'⏰ ':'')+escapeHtml(name)+'</div>';
+      }).join('');
+
+      weeksHtml += '<div class="cal-week" style="min-height:'+weekMinHeight+'px;">'
+        + '<div class="cal-week-days">' + daysHtml + '</div>'
+        + '<div class="cal-bar-layer">' + barsHtml + '</div>'
+        + '</div>';
+
+      cursor = addDays(cursor, 7);
+    }
+
+    document.getElementById('calWeeks').innerHTML = weeksHtml;
+
+    document.querySelectorAll('.cal-daybox[data-inmonth="1"]').forEach(function(box){
+      box.addEventListener('click', function(){
+        openPostingModal({id:null, hospitalId:hospitals[0]?hospitals[0].id:'', date:box.dataset.date, title:'', deadline:'', link:'', memo:''}, '이 날짜에 공고 추가');
+      });
+    });
+    document.querySelectorAll('.cal-bar').forEach(function(bar){
+      bar.addEventListener('click', function(e){
+        e.stopPropagation();
+        var p = postings.find(function(x){ return x.id === bar.dataset.postingId; });
+        if(p) openPostingDetailModal(p);
+      });
+    });
+
+    renderCalLegend();
+    renderUrgentSidebar();
+  }
+
+  function renderCalLegend(){
+    var existing = document.getElementById('calLegend');
+    var usedHospitalIds = {};
+    postings.forEach(function(p){ usedHospitalIds[p.hospitalId] = true; });
+    var used = hospitals.filter(function(h){ return usedHospitalIds[h.id]; });
+    var html = '';
+    if(used.length){
+      html = '<div class="cal-legend" id="calLegend">' + used.map(function(h){
+        return '<div class="cal-legend-item"><span class="color-dot" style="background:'+(h.color||'#999')+';"></span>'+escapeHtml(h.name)+'</div>';
+      }).join('') + '</div>';
+    }
+    if(existing){
+      existing.outerHTML = html;
+    } else if(html){
+      document.getElementById('calDowRow').insertAdjacentHTML('beforebegin', html);
+    }
+  }
+
+  function renderUrgentSidebar(){
+    var urgent = postings.filter(function(p){
+      if(!p.deadline) return false;
+      var d = daysUntil(p.deadline);
+      return d !== null && d >= 0 && d <= 3;
+    }).sort(function(a,b){ return daysUntil(a.deadline) - daysUntil(b.deadline); });
+
+    var listEl = document.getElementById('urgentList');
+    if(!urgent.length){
+      listEl.innerHTML = '<div class="empty-state" style="padding:20px 8px;">마감 3일 이내 공고가 없어요.</div>';
+      return;
+    }
+    listEl.innerHTML = urgent.map(function(p){
+      var h = hospitalById(p.hospitalId);
+      var name = h ? h.name : (p.hospitalName || '(미상)');
+      var d = daysUntil(p.deadline);
+      return '<div class="urgent-card" data-posting-id="'+p.id+'">'
+        + '<div class="urgent-hospital">'+escapeHtml(name)+'</div>'
+        + '<div class="urgent-jobtitle">'+escapeHtml(p.title||'')+'</div>'
+        + '<div class="urgent-dday">'+(d===0?'오늘 마감':'D-'+d)+'</div>'
+        + '</div>';
+    }).join('');
+    listEl.querySelectorAll('.urgent-card').forEach(function(card){
+      card.addEventListener('click', function(){
+        var p = postings.find(function(x){ return x.id === card.dataset.postingId; });
+        if(p) openPostingDetailModal(p);
+      });
+    });
+  }
+
+  function openPostingDetailModal(p){
+    var h = hospitalById(p.hospitalId);
+    var name = h ? h.name : (p.hospitalName || '(미상)');
+    var link = p.link || (h ? h.link : '');
+    var dday = p.deadline ? daysUntil(p.deadline) : null;
+    openModal(
+      '<h3>'+escapeHtml(name)+'</h3>'
+      + '<div style="font-size:14px;font-weight:600;margin-bottom:4px;">'+escapeHtml(p.title||'')+'</div>'
+      + '<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">공고일 '+p.date+(p.deadline?(' · 마감 '+p.deadline):'')+'</div>'
+      + (p.memo ? '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;">'+escapeHtml(p.memo)+'</div>' : '')
+      + (dday!==null ? '<div class="label-chip" style="color:'+(dday<0?'var(--red)':'var(--amber)')+';margin-bottom:10px;">'+(dday<0?'마감됨':(dday===0?'오늘 마감':'D-'+dday))+'</div>' : '')
+      + '<div class="modal-close-row" style="justify-content:flex-start;">'
+      + (link ? '<a class="btn btn-sm" target="_blank" rel="noopener" href="'+escapeHtml(link)+'">공고 페이지 열기 ↗</a>' : '')
+      + '<button class="btn btn-sm" id="detailEditBtn">수정</button>'
+      + '<button class="btn btn-primary btn-sm" id="detailAddAppBtn">지원현황에 추가</button>'
+      + '<button class="btn btn-danger btn-sm" id="detailDelBtn">삭제</button>'
+      + '</div>'
+      + '<div class="modal-close-row"><button class="btn" id="modalCloseBtn">닫기</button></div>'
+    );
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+    document.getElementById('detailEditBtn').addEventListener('click', function(){
+      openPostingModal(p);
+    });
+    document.getElementById('detailAddAppBtn').addEventListener('click', function(){
+      closeModal();
+      openApplicationModal(null, {hospitalId:p.hospitalId, postingId:p.id});
+    });
+    document.getElementById('detailDelBtn').addEventListener('click', function(){
+      if(!confirm('이 공고를 삭제할까요?')) return;
+      postings = postings.filter(function(x){ return x.id !== p.id; });
+      savePostings();
+      closeModal();
+      renderCalendar();
+      renderStats();
+    });
+  }
+
+  document.getElementById('calPrev').addEventListener('click', function(){
+    calMonth--; if(calMonth<1){calMonth=12; calYear--;}
+    renderCalendar();
+  });
+  document.getElementById('calNext').addEventListener('click', function(){
+    calMonth++; if(calMonth>12){calMonth=1; calYear++;}
+    renderCalendar();
+  });
+  document.getElementById('calToday').addEventListener('click', function(){
+    calYear = today.getFullYear(); calMonth = today.getMonth()+1;
+    renderCalendar();
+  });
+  document.getElementById('calAddBtn').addEventListener('click', function(){
+    openPostingModal(null);
+  });
+
+  function openPostingModal(posting, titleOverride){
+    var isEdit = !!(posting && posting.id);
+    posting = posting || {id:null, hospitalId:hospitals[0]?hospitals[0].id:'', date:fmtDate(calYear,calMonth,1), title:'', deadline:'', link:'', memo:''};
+    openModal(
+      '<h3>'+(titleOverride || (isEdit?'공고 수정':'공고 직접 추가'))+'</h3>'
+      + '<div class="field"><label>병원</label><select id="pfHospital">'+hospitalOptions(posting.hospitalId)+'</select></div>'
+      + '<div class="field-row">'
+      + '<div class="field"><label>공고일</label><input type="date" id="pfDate" value="'+posting.date+'"></div>'
+      + '<div class="field"><label>마감일(선택)</label><input type="date" id="pfDeadline" value="'+(posting.deadline||'')+'"></div>'
+      + '</div>'
+      + '<div class="field"><label>제목</label><input type="text" id="pfTitle" value="'+escapeHtml(posting.title)+'" placeholder="예: 임상병리사 채용공고"></div>'
+      + '<div class="field"><label>링크(선택, 비우면 병원 기본 링크 사용)</label><input type="url" id="pfLink" value="'+escapeHtml(posting.link)+'"></div>'
+      + '<div class="field"><label>메모</label><textarea id="pfMemo" style="min-height:60px;">'+escapeHtml(posting.memo)+'</textarea></div>'
+      + '<div class="modal-close-row"><button class="btn" id="modalCancel">취소</button><button class="btn btn-primary" id="modalSave">저장</button></div>'
+    );
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalSave').addEventListener('click', function(){
+      var hid = document.getElementById('pfHospital').value;
+      var date = document.getElementById('pfDate').value;
+      if(!hid || !date){ showToast('병원과 날짜는 필수예요'); return; }
+      var data = {
+        id: posting.id || uid('p'),
+        hospitalId: hid,
+        date: date,
+        deadline: document.getElementById('pfDeadline').value || '',
+        title: document.getElementById('pfTitle').value.trim() || '채용공고',
+        link: document.getElementById('pfLink').value.trim(),
+        memo: document.getElementById('pfMemo').value.trim()
+      };
+      if(isEdit){
+        postings = postings.map(function(p){ return p.id===data.id ? data : p; });
+      } else {
+        postings.push(data);
+      }
+      savePostings();
+      closeModal();
+      renderCalendar();
+      renderStats();
+      showToast('저장했어요');
+    });
+  }
+
+  /* ================= APPLICATIONS ================= */
+  function renderAppFilters(){
+    var chips = ['전체'].concat(STATUS_LIST);
+    document.getElementById('appFilters').innerHTML = chips.map(function(s){
+      return '<button class="filter-chip'+(appFilter===s?' active':'')+'" data-status="'+s+'">'+s+'</button>';
+    }).join('');
+    document.querySelectorAll('.filter-chip').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        appFilter = btn.dataset.status;
+        renderAppFilters();
+        renderApplications();
+      });
+    });
+  }
+
+  function renderApplications(){
+    renderChatContextOptions();
+    var list = applications.filter(function(a){ return appFilter==='전체' || a.status===appFilter; });
+    list.sort(function(a,b){ return (b.updatedAt||'').localeCompare(a.updatedAt||''); });
+
+    if(!list.length){
+      document.getElementById('appList').innerHTML = '<div class="empty-state">아직 등록된 지원 내역이 없어요. 캘린더에서 공고를 추가하거나 "+ 새 지원 추가"를 눌러보세요.</div>';
+      return;
+    }
+
+    document.getElementById('appList').innerHTML = list.map(function(a){
+      var meta = STATUS_META[a.status] || STATUS_META['관심등록'];
+      var h = hospitalById(a.hospitalId);
+      var link = h ? h.link : '';
+      var statusOptions = STATUS_LIST.map(function(s){
+        return '<option value="'+s+'"'+(s===a.status?' selected':'')+'>'+s+'</option>';
+      }).join('');
+      return '<div class="app-card" data-id="'+a.id+'">'
+        + '<div class="app-card-top">'
+        + '<div><div class="app-hospital">'+escapeHtml(a.hospitalName)+'</div>'
+        + '<div class="app-meta">'+(a.appliedDate?('지원일 '+a.appliedDate):'날짜 미지정')+(a.postingTitle?(' · '+escapeHtml(a.postingTitle)):'')+'</div></div>'
+        + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+        + '<select class="app-status-select" data-id="'+a.id+'" style="width:auto;font-family:var(--font-mono);font-size:12px;font-weight:600;color:'+meta.c+';background:'+meta.bg+';border-color:transparent;">'+statusOptions+'</select>'
+        + (link?('<a class="btn btn-sm" target="_blank" rel="noopener" href="'+escapeHtml(link)+'">공고 링크 ↗</a>'):'')
+        + '<button class="btn btn-danger btn-sm" data-del-app="'+a.id+'">삭제</button>'
+        + '</div></div>'
+        + '<details class="app-body"><summary>메모 · 자기소개서 · 면접 복기 보기/편집</summary>'
+        + '<div class="app-textarea-wrap">'
+        + '<div class="field"><label>메모</label><input type="text" class="app-memo-input" data-id="'+a.id+'" value="'+escapeHtml(a.memo||'')+'" placeholder="예: 필기시험 8/10, 담당자 연락처 등"></div>'
+        + '<div class="field"><label>자기소개서</label><textarea class="app-cover-input" data-id="'+a.id+'" placeholder="이 지원에 사용한 자기소개서를 저장해두세요">'+escapeHtml(a.coverLetter||'')+'</textarea></div>'
+        + '<div class="field"><label>면접 복기</label><textarea class="app-interview-input" data-id="'+a.id+'" placeholder="받았던 질문, 답변, 분위기, 아쉬웠던 점 등을 자유롭게 적어두세요">'+escapeHtml(a.interviewNotes||'')+'</textarea></div>'
+        + '<button class="btn btn-primary btn-sm app-save-btn" data-id="'+a.id+'">저장</button>'
+        + '<span class="save-hint">저장을 눌러야 반영돼요. 삭제 전까지 계속 보관됩니다.</span>'
+        + '</div></details>'
+        + '</div>';
+    }).join('');
+
+    document.querySelectorAll('.app-status-select').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        var a = applications.find(function(x){ return x.id===sel.dataset.id; });
+        if(a){ a.status = sel.value; a.updatedAt = new Date().toISOString(); saveApplications(); renderApplications(); renderStats(); showToast('상태를 업데이트했어요'); }
+      });
+    });
+    document.querySelectorAll('.app-save-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.id;
+        var a = applications.find(function(x){ return x.id===id; });
+        if(!a) return;
+        var memoInput = document.querySelector('.app-memo-input[data-id="'+id+'"]');
+        var coverInput = document.querySelector('.app-cover-input[data-id="'+id+'"]');
+        var interviewInput = document.querySelector('.app-interview-input[data-id="'+id+'"]');
+        a.memo = memoInput.value.trim();
+        a.coverLetter = coverInput.value;
+        a.interviewNotes = interviewInput.value;
+        a.updatedAt = new Date().toISOString();
+        saveApplications();
+        showToast('저장했어요');
+      });
+    });
+    document.querySelectorAll('[data-del-app]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(!confirm('이 지원 내역을 삭제할까요? 자기소개서도 함께 삭제돼요.')) return;
+        var id = btn.dataset.delApp;
+        applications = applications.filter(function(a){ return a.id!==id; });
+        saveApplications();
+        renderApplications();
+        renderStats();
+      });
+    });
+  }
+
+  document.getElementById('appAddBtn').addEventListener('click', function(){
+    openApplicationModal(null, {});
+  });
+
+  function openApplicationModal(existing, prefill){
+    prefill = prefill || {};
+    var hid = prefill.hospitalId || (hospitals[0] ? hospitals[0].id : '');
+    var h = hospitalById(hid);
+    openModal(
+      '<h3>새 지원 추가</h3>'
+      + '<div class="field"><label>병원</label><select id="afHospital">'+hospitalOptions(hid)+'</select></div>'
+      + '<div class="field"><label>지원일</label><input type="date" id="afDate" value="'+fmtDate(today.getFullYear(),today.getMonth()+1,today.getDate())+'"></div>'
+      + '<div class="field"><label>공고 제목(선택)</label><input type="text" id="afTitle" value="" placeholder="예: 2026년 상반기 임상병리사 채용"></div>'
+      + '<div class="field"><label>초기 상태</label><select id="afStatus">'+STATUS_LIST.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('')+'</select></div>'
+      + '<div class="modal-close-row"><button class="btn" id="modalCancel">취소</button><button class="btn btn-primary" id="modalSave">추가</button></div>'
+    );
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalSave').addEventListener('click', function(){
+      var hospitalId = document.getElementById('afHospital').value;
+      var hospital = hospitalById(hospitalId);
+      var data = {
+        id: uid('a'),
+        hospitalId: hospitalId,
+        hospitalName: hospital ? hospital.name : '(미상)',
+        postingId: prefill.postingId || null,
+        postingTitle: document.getElementById('afTitle').value.trim(),
+        appliedDate: document.getElementById('afDate').value,
+        status: document.getElementById('afStatus').value,
+        memo: '',
+        coverLetter: '',
+        interviewNotes: '',
+        updatedAt: new Date().toISOString()
+      };
+      applications.push(data);
+      saveApplications();
+      closeModal();
+      appFilter = '전체';
+      renderAppFilters();
+      renderApplications();
+      renderStats();
+      showToast('지원현황에 추가했어요');
+    });
+  }
+
+  /* ================= HOSPITALS ================= */
+  function renderHospitals(){
+    document.getElementById('hospCount').textContent = hospitals.length;
+    document.getElementById('hospList').innerHTML = hospitals.map(function(h){
+      return '<div class="hosp-row">'
+        + '<div class="hosp-row-top">'
+        + '<div style="min-width:0;flex:1;"><div class="hosp-name-line"><span class="color-dot" style="background:'+(h.color||'#999')+';"></span><span class="hosp-name">'+escapeHtml(h.name)+'</span></div>'
+        + '<div class="hosp-tags">'+escapeHtml(h.region||'')+' · '+escapeHtml(h.category||'')+'</div>'
+        + (h.note ? '<div class="hosp-note">'+escapeHtml(h.note)+'</div>' : '')
+        + '</div>'
+        + '</div>'
+        + '<div class="btn-row" style="margin-top:8px;">'
+        + '<a class="btn btn-sm" target="_blank" rel="noopener" href="'+escapeHtml(h.link)+'">채용페이지 ↗</a>'
+        + '<button class="btn btn-sm" data-edit-hosp="'+h.id+'">수정</button>'
+        + '<button class="btn btn-danger btn-sm" data-del-hosp="'+h.id+'">삭제</button>'
+        + '</div>'
+        + '<details class="app-body" style="margin-top:8px;"><summary>'+(h.coverLetter ? '📄 자소서 등록됨' : '자소서 등록하기')+'</summary>'
+        + '<div class="app-textarea-wrap">'
+        + '<textarea class="hosp-cover-input" data-id="'+h.id+'" placeholder="이 병원에 지원할 때 쓸 기본 자기소개서를 저장해두세요">'+escapeHtml(h.coverLetter||'')+'</textarea>'
+        + '<button class="btn btn-primary btn-sm hosp-cover-save" data-id="'+h.id+'" style="margin-top:8px;">저장</button>'
+        + '<span class="save-hint">저장을 눌러야 반영돼요.</span>'
+        + '</div></details>'
+        + '</div>';
+    }).join('');
+
+    document.querySelectorAll('[data-edit-hosp]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openHospitalModal(hospitalById(btn.dataset.editHosp));
+      });
+    });
+    document.querySelectorAll('[data-del-hosp]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(!confirm('이 병원을 목록에서 삭제할까요? 등록된 자소서도 함께 삭제돼요. 관련 공고/지원 내역은 유지돼요.')) return;
+        var id = btn.dataset.delHosp;
+        hospitals = hospitals.filter(function(h){ return h.id!==id; });
+        saveHospitals();
+        renderHospitals();
+      });
+    });
+    document.querySelectorAll('.hosp-cover-save').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.id;
+        var h = hospitalById(id);
+        if(!h) return;
+        var ta = document.querySelector('.hosp-cover-input[data-id="'+id+'"]');
+        h.coverLetter = ta.value;
+        saveHospitals();
+        renderHospitals();
+        showToast('자소서를 저장했어요');
+      });
+    });
+  }
+
+  document.getElementById('hospAddBtn').addEventListener('click', function(){
+    openHospitalModal(null);
+  });
+
+  function openHospitalModal(existing){
+    var isEdit = !!existing;
+    var h = existing || {id:null, name:'', region:'', category:'대학병원', link:'', note:'', color:nextPaletteColor(hospitals.length)};
+    openModal(
+      '<h3>'+(isEdit?'병원 정보 수정':'병원 추가')+'</h3>'
+      + '<div class="field"><label>병원명</label><input type="text" id="hfName" value="'+escapeHtml(h.name)+'"></div>'
+      + '<div class="field"><label>캘린더 색상</label><div class="color-field-row"><input type="color" id="hfColor" value="'+(h.color||'#E8637F')+'"><input type="text" id="hfColorText" value="'+(h.color||'#E8637F')+'" placeholder="#RRGGBB"></div></div>'
+      + '<div class="field-row">'
+      + '<div class="field"><label>지역</label><input type="text" id="hfRegion" value="'+escapeHtml(h.region)+'" placeholder="서울/경기/인천"></div>'
+      + '<div class="field"><label>구분</label><input type="text" id="hfCategory" value="'+escapeHtml(h.category)+'" placeholder="대학병원/상급종합병원"></div>'
+      + '</div>'
+      + '<div class="field"><label>채용 페이지 링크</label><input type="url" id="hfLink" value="'+escapeHtml(h.link)+'"></div>'
+      + '<div class="field"><label>채용 주기 메모(선택)</label><input type="text" id="hfNote" value="'+escapeHtml(h.note)+'" placeholder="예: 매년 2월·8월 정기채용"></div>'
+      + '<div class="modal-close-row"><button class="btn" id="modalCancel">취소</button><button class="btn btn-primary" id="modalSave">저장</button></div>'
+    );
+    var colorPicker = document.getElementById('hfColor');
+    var colorText = document.getElementById('hfColorText');
+    colorPicker.addEventListener('input', function(){ colorText.value = colorPicker.value; });
+    colorText.addEventListener('input', function(){
+      if(/^#[0-9a-fA-F]{6}$/.test(colorText.value)) colorPicker.value = colorText.value;
+    });
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalSave').addEventListener('click', function(){
+      var name = document.getElementById('hfName').value.trim();
+      var link = document.getElementById('hfLink').value.trim();
+      if(!name || !link){ showToast('병원명과 링크는 필수예요'); return; }
+      var colorVal = /^#[0-9a-fA-F]{6}$/.test(colorText.value) ? colorText.value : (h.color||'#E8637F');
+      var data = {
+        id: h.id || uid('h'),
+        name: name,
+        region: document.getElementById('hfRegion').value.trim(),
+        category: document.getElementById('hfCategory').value.trim(),
+        link: link,
+        note: document.getElementById('hfNote').value.trim(),
+        color: colorVal,
+        coverLetter: h.coverLetter || ''
+      };
+      if(isEdit){
+        hospitals = hospitals.map(function(x){ return x.id===data.id ? data : x; });
+      } else {
+        hospitals.push(data);
+      }
+      saveHospitals();
+      closeModal();
+      renderHospitals();
+      showToast('저장했어요');
+    });
+  }
+
+  /* ================= IMPORT ================= */
+  function findHospitalByName(name){
+    if(!name) return null;
+    var norm = name.replace(/\s+/g,'').toLowerCase();
+    var exact = hospitals.find(function(h){ return h.name.replace(/\s+/g,'').toLowerCase() === norm; });
+    if(exact) return exact;
+    return hospitals.find(function(h){
+      var hn = h.name.replace(/\s+/g,'').toLowerCase();
+      return hn.indexOf(norm) !== -1 || norm.indexOf(hn) !== -1;
+    }) || null;
+  }
+
+  /* ================= AUTO SEARCH / REVIEW QUEUE ================= */
+  async function saveReviewQueue(){ await setData('review-queue', reviewQueue); }
+
+  document.getElementById('autoSearchBtn').addEventListener('click', function(){
+    var names = hospitals.map(function(h){ return h.name; }).join(', ');
+    var prompt = '지금 등록된 병원들(' + names + ')의 채용 사이트를 직접 검색해서, '
+      + '현재 지원 가능한 임상병리사/진단검사의학과 관련 공고가 있는지 확인해줘. '
+      + '찾은 공고는 공고 등록 탭의 대기열 JSON 형식(hospital, date, title, deadline, link, memo)에 맞춰 코드블럭으로 줘. '
+      + '없으면 없다고 알려줘.';
+
+    var sent = false;
+    try{
+      if(typeof sendPrompt === 'function'){ sendPrompt(prompt); sent = true; }
+      else if(typeof window.sendPrompt === 'function'){ window.sendPrompt(prompt); sent = true; }
+    }catch(e){ sent = false; }
+
+    if(sent){ return; }
+
+    // fallback: copy to clipboard so the user can paste it into chat themselves
+    var copied = false;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(prompt).then(function(){
+        showToast('요청 문구를 복사했어요! 채팅창에 붙여넣기(Ctrl/Cmd+V) 해주세요');
+      }).catch(function(){ showManualPromptModal(prompt); });
+      copied = true;
+    }
+    if(!copied){ showManualPromptModal(prompt); }
+  });
+
+  function showManualPromptModal(prompt){
+    openModal(
+      '<h3>검색 요청 문구</h3>'
+      + '<p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">자동 전송이 지원되지 않는 환경이에요. 아래 문구를 복사해서 채팅창에 붙여넣어 주세요.</p>'
+      + '<textarea id="manualPromptText" style="min-height:140px;font-size:12.5px;" readonly>'+escapeHtml(prompt)+'</textarea>'
+      + '<div class="modal-close-row"><button class="btn" id="modalCloseBtn">닫기</button><button class="btn btn-primary" id="manualCopyBtn">복사하기</button></div>'
+    );
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+    document.getElementById('manualCopyBtn').addEventListener('click', function(){
+      var ta = document.getElementById('manualPromptText');
+      ta.select();
+      try{ document.execCommand('copy'); showToast('복사했어요'); }catch(e){ showToast('복사에 실패했어요, 직접 선택해서 복사해주세요'); }
+    });
+  }
+
+  document.getElementById('queueImportClearBtn').addEventListener('click', function(){
+    document.getElementById('queueImportArea').value = '';
+    document.getElementById('queueImportResult').textContent = '';
+  });
+
+  document.getElementById('queueImportBtn').addEventListener('click', function(){
+    var raw = document.getElementById('queueImportArea').value.trim();
+    var resultEl = document.getElementById('queueImportResult');
+    if(!raw){ resultEl.style.color='var(--red)'; resultEl.textContent='붙여넣은 내용이 없어요.'; return; }
+    var data;
+    try{
+      var cleaned = raw.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+      data = JSON.parse(cleaned);
+      if(!Array.isArray(data)) throw new Error('array expected');
+    }catch(e){
+      resultEl.style.color='var(--red)';
+      resultEl.textContent = 'JSON 형식을 확인해주세요.';
+      return;
+    }
+    var added = 0;
+    data.forEach(function(item){
+      if(!item || !item.hospital || !item.date) return;
+      reviewQueue.push({
+        id: uid('q'),
+        hospital: item.hospital,
+        date: item.date,
+        deadline: item.deadline || '',
+        title: item.title || '채용공고',
+        link: item.link || '',
+        memo: item.memo || ''
+      });
+      added++;
+    });
+    saveReviewQueue();
+    renderReviewQueue();
+    resultEl.style.color = 'var(--green)';
+    resultEl.textContent = '대기열에 '+added+'건 담았어요. 아래에서 확인 후 캘린더에 추가해주세요.';
+    document.getElementById('queueImportArea').value = '';
+  });
+
+  function renderReviewQueue(){
+    document.getElementById('queueCount').textContent = reviewQueue.length;
+    var listEl = document.getElementById('reviewQueueList');
+    if(!reviewQueue.length){
+      listEl.innerHTML = '<div class="empty-state">대기 중인 공고가 없어요. 위 버튼으로 검색을 요청해보세요.</div>';
+      return;
+    }
+    listEl.innerHTML = reviewQueue.map(function(q){
+      return '<div class="queue-card" data-id="'+q.id+'">'
+        + '<div class="queue-main">'
+        + '<div class="queue-hospital">'+escapeHtml(q.hospital)+'</div>'
+        + '<div class="queue-title">'+escapeHtml(q.title)+(q.memo?(' · '+escapeHtml(q.memo)):'')+'</div>'
+        + '<div class="queue-dates">공고일 '+escapeHtml(q.date)+(q.deadline?(' · 마감 '+escapeHtml(q.deadline)):'')+'</div>'
+        + '</div>'
+        + '<div class="btn-row">'
+        + (q.link ? ('<a class="btn btn-sm" target="_blank" rel="noopener" href="'+escapeHtml(q.link)+'">공고 보기 ↗</a>') : '')
+        + '<button class="btn btn-primary btn-sm" data-queue-add="'+q.id+'">캘린더에 추가</button>'
+        + '<button class="btn btn-ghost btn-sm" data-queue-skip="'+q.id+'">건너뛰기</button>'
+        + '</div></div>';
+    }).join('');
+
+    document.querySelectorAll('[data-queue-add]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var q = reviewQueue.find(function(x){ return x.id===btn.dataset.queueAdd; });
+        if(!q) return;
+        var hospital = findHospitalByName(q.hospital);
+        if(!hospital){
+          hospital = { id: uid('h'), name: q.hospital, region:'', category:'', link: q.link || '', note:'', color: nextPaletteColor(hospitals.length) };
+          hospitals.push(hospital);
+          saveHospitals();
+          renderHospitals();
+        }
+        postings.push({
+          id: uid('p'),
+          hospitalId: hospital.id,
+          date: q.date,
+          deadline: q.deadline || '',
+          title: q.title,
+          link: q.link || '',
+          memo: q.memo || ''
+        });
+        savePostings();
+        reviewQueue = reviewQueue.filter(function(x){ return x.id !== q.id; });
+        saveReviewQueue();
+        renderCalendar();
+        renderStats();
+        renderReviewQueue();
+        showToast('캘린더에 추가했어요');
+      });
+    });
+    document.querySelectorAll('[data-queue-skip]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        reviewQueue = reviewQueue.filter(function(x){ return x.id !== btn.dataset.queueSkip; });
+        saveReviewQueue();
+        renderReviewQueue();
+      });
+    });
+  }
+
+  /* ================= PASTE & AI EXTRACT ================= */
+  document.getElementById('pasteClearBtn').addEventListener('click', function(){
+    document.getElementById('pasteArea').value = '';
+    document.getElementById('pasteLink').value = '';
+    document.getElementById('pasteResult').textContent = '';
+  });
+
+  document.getElementById('pasteAnalyzeBtn').addEventListener('click', async function(){
+    var text = document.getElementById('pasteArea').value.trim();
+    var linkHint = document.getElementById('pasteLink').value.trim();
+    var resultEl = document.getElementById('pasteResult');
+    var btn = document.getElementById('pasteAnalyzeBtn');
+
+    if(!text){ resultEl.style.color='var(--red)'; resultEl.textContent='붙여넣은 공고 내용이 없어요.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '분석 중...';
+    resultEl.style.color = 'var(--ink-soft)';
+    resultEl.textContent = 'AI가 공고를 읽는 중이에요...';
+
+    var todayStr = fmtDate(today.getFullYear(), today.getMonth()+1, today.getDate());
+    var hospitalNames = hospitals.map(function(h){ return h.name; }).join(', ');
+
+    var systemPrompt = '너는 병원 채용공고 텍스트에서 정보를 추출하는 도구야. '
+      + '반드시 순수한 JSON 객체 하나만 출력해. 다른 설명, 인사말, 마크다운 코드블럭 기호(```) 없이 JSON만 출력해. '
+      + '오늘 날짜는 ' + todayStr + '야. '
+      + '이미 등록된 병원 목록: [' + hospitalNames + ']. hospital 필드는 이 목록에 있는 이름과 최대한 동일하게 맞춰주고, 목록에 없는 새 병원이면 텍스트에 나온 이름 그대로 써줘. '
+      + 'JSON 필드는 다음과 같아: '
+      + '{"hospital": "병원명 문자열", "date": "공고 등록일 또는 오늘 날짜 추정, YYYY-MM-DD 형식, 모르면 빈 문자열", '
+      + '"deadline": "지원 마감일, YYYY-MM-DD 형식, 없거나 모르면 빈 문자열", '
+      + '"title": "공고 제목 (간결하게, 부서/직군 포함)", '
+      + '"memo": "근무형태·부서·자격요건 등을 한 줄로 요약, 없으면 빈 문자열"}';
+
+    var userContent = text + (linkHint ? ('\n\n[공고 링크]: ' + linkHint) : '');
+
+    try{
+      var rawText = await callAI(systemPrompt, [{ role: "user", content: userContent }]);
+      rawText = rawText.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+
+      var extracted;
+      try{
+        extracted = JSON.parse(rawText);
+      }catch(parseErr){
+        throw new Error('parse_failed');
+      }
+
+      var hospitalName = (extracted.hospital || '').trim();
+      var hospital = findHospitalByName(hospitalName);
+      var isNewHospital = false;
+      if(!hospital && hospitalName){
+        hospital = { id: uid('h'), name: hospitalName, region:'', category:'', link: linkHint || '', note:'', color: nextPaletteColor(hospitals.length) };
+        hospitals.push(hospital);
+        isNewHospital = true;
+        await saveHospitals();
+        renderHospitals();
+      }
+
+      resultEl.style.color = 'var(--green)';
+      resultEl.textContent = '분석 완료' + (isNewHospital ? ' (새 병원 등록됨)' : '') + '. 확인 창에서 저장해주세요.';
+
+      var prefill = {
+        id: null,
+        hospitalId: hospital ? hospital.id : (hospitals[0] ? hospitals[0].id : ''),
+        date: extracted.date || todayStr,
+        deadline: extracted.deadline || '',
+        title: extracted.title || '채용공고',
+        link: linkHint || (hospital ? hospital.link : ''),
+        memo: extracted.memo || ''
+      };
+      openPostingModal(prefill, '분석 결과 확인 · 저장');
+
+    }catch(err){
+      resultEl.style.color = 'var(--red)';
+      resultEl.textContent = (err && err.message === 'worker_not_configured')
+        ? 'AI_WORKER_URL이 아직 설정 안 됐어요 (코드 상단 참고). 내용을 확인 창에서 직접 입력해주세요.'
+        : 'AI 분석에 실패했어요. 내용을 확인 창에서 직접 입력해주세요.';
+      openPostingModal({
+        id:null,
+        hospitalId: hospitals[0] ? hospitals[0].id : '',
+        date: todayStr,
+        deadline:'',
+        title: text.slice(0,40),
+        link: linkHint,
+        memo:''
+      }, '직접 확인 및 저장');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '자동 분석';
+    }
+  });
+
+  /* ================= AI CHAT / CONSULTING ================= */
+  var chatMessages = [];
+
+  function renderChatContextOptions(){
+    var sel = document.getElementById('chatContext');
+    var prevVal = sel.value;
+    var opts = '<option value="">— 특정 건 없이 일반 상담 —</option>';
+    applications.forEach(function(a){
+      opts += '<option value="'+a.id+'">'+escapeHtml(a.hospitalName)+' · '+a.status+(a.appliedDate?(' · '+a.appliedDate):'')+'</option>';
+    });
+    sel.innerHTML = opts;
+    if(applications.some(function(a){ return a.id===prevVal; })) sel.value = prevVal;
+  }
+
+  function renderChat(){
+    var win = document.getElementById('chatWindow');
+    if(!chatMessages.length){
+      win.innerHTML = '<div class="chat-empty">병원별 자소서나 면접 복기를 골라서 "여기 피드백 좀 줘" 처럼 물어보세요. 그냥 편하게 이야기해도 돼요.</div>';
+      return;
+    }
+    win.innerHTML = chatMessages.map(function(m){
+      return '<div class="chat-bubble '+(m.role==='user'?'user':'assistant')+'">'+escapeHtml(m.content)+'</div>';
+    }).join('');
+    win.scrollTop = win.scrollHeight;
+  }
+
+  document.getElementById('chatClearBtn').addEventListener('click', async function(){
+    if(!chatMessages.length){ return; }
+    if(!confirm('대화 내용을 전부 삭제할까요? 이 작업은 되돌릴 수 없어요.')) return;
+    chatMessages = [];
+    await setData('chat-messages', chatMessages);
+    renderChat();
+    showToast('대화를 초기화했어요');
+  });
+
+  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+  document.getElementById('chatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  async function sendChatMessage(){
+    var input = document.getElementById('chatInput');
+    var text = input.value.trim();
+    if(!text) return;
+    var sendBtn = document.getElementById('chatSendBtn');
+
+    chatMessages.push({role:'user', content:text});
+    input.value = '';
+    renderChat();
+    await setData('chat-messages', chatMessages);
+
+    var win = document.getElementById('chatWindow');
+    var pending = document.createElement('div');
+    pending.className = 'chat-bubble pending';
+    pending.textContent = '생각하는 중...';
+    win.appendChild(pending);
+    win.scrollTop = win.scrollHeight;
+    sendBtn.disabled = true;
+
+    var contextId = document.getElementById('chatContext').value;
+    var contextApp = contextId ? applications.find(function(a){ return a.id===contextId; }) : null;
+    var contextHospital = contextApp ? hospitalById(contextApp.hospitalId) : null;
+
+    var systemPrompt = '너는 대한민국 임상병리사(진단검사의학과·병리과) 취업을 준비하는 사용자를 돕는 다정하고 현실적인 커리어 상담가야. '
+      + '자기소개서와 면접 복기를 구체적으로 분석해서 개선점을 짚어주고, 막연한 위로보다는 실질적이고 실행 가능한 조언을 우선해줘. '
+      + '과장하거나 근거 없이 확신하지 말고, 사용자가 준 정보를 바탕으로만 이야기해. 답변은 대화체로, 너무 길지 않게 해줘.';
+
+    if(contextApp){
+      systemPrompt += '\n\n[현재 상담 대상 지원 건]\n'
+        + '병원: ' + (contextHospital ? contextHospital.name : contextApp.hospitalName) + '\n'
+        + '상태: ' + contextApp.status + '\n'
+        + (contextApp.postingTitle ? ('공고 제목: ' + contextApp.postingTitle + '\n') : '')
+        + (contextApp.memo ? ('메모: ' + contextApp.memo + '\n') : '')
+        + (contextApp.coverLetter ? ('자기소개서:\n' + contextApp.coverLetter + '\n') : '')
+        + (contextApp.interviewNotes ? ('면접 복기:\n' + contextApp.interviewNotes + '\n') : '')
+        + (contextHospital && contextHospital.coverLetter ? ('이 병원용 기본 자기소개서:\n' + contextHospital.coverLetter + '\n') : '');
+    }
+
+    try{
+      var apiMessages = chatMessages.map(function(m){ return {role:m.role, content:m.content}; });
+      var replyText = await callAI(systemPrompt, apiMessages);
+      if(!replyText) throw new Error('empty_reply');
+      chatMessages.push({role:'assistant', content:replyText});
+    }catch(err){
+      var msg = (err && err.message === 'worker_not_configured')
+        ? 'AI_WORKER_URL이 아직 설정 안 됐어요. 코드 상단의 AI_WORKER_URL을 본인 Worker 주소로 바꿔주세요.'
+        : '앗, 응답을 받아오는데 문제가 생겼어요. 잠시 후 다시 시도해주세요.';
+      chatMessages.push({role:'assistant', content:msg});
+    }finally{
+      sendBtn.disabled = false;
+      await setData('chat-messages', chatMessages);
+      renderChat();
+    }
+  }
+
+  /* ================= BACKUP / RESTORE ================= */
+  document.getElementById('backupDownloadBtn').addEventListener('click', function(){
+    var backup = {
+      exportedAt: new Date().toISOString(),
+      hospitals: hospitals,
+      postings: postings,
+      applications: applications,
+      reviewQueue: reviewQueue,
+      chatMessages: chatMessages
+    };
+    var blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var stamp = fmtDate(today.getFullYear(), today.getMonth()+1, today.getDate());
+    a.href = url;
+    a.download = 'lab-career-tracker-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    showToast('백업 파일을 다운로드했어요');
+  });
+
+  document.getElementById('backupFileInput').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    var resultEl = document.getElementById('backupResult');
+    if(!file) return;
+    if(!confirm('현재 데이터를 백업 파일 내용으로 덮어씁니다. 계속할까요?')){
+      e.target.value = '';
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = async function(ev){
+      try{
+        var backup = JSON.parse(ev.target.result);
+        hospitals = Array.isArray(backup.hospitals) ? backup.hospitals : hospitals;
+        postings = Array.isArray(backup.postings) ? backup.postings : postings;
+        applications = Array.isArray(backup.applications) ? backup.applications : applications;
+        reviewQueue = Array.isArray(backup.reviewQueue) ? backup.reviewQueue : reviewQueue;
+        chatMessages = Array.isArray(backup.chatMessages) ? backup.chatMessages : chatMessages;
+        hospitals.forEach(function(h, idx){ if(!h.color){ h.color = nextPaletteColor(idx); } });
+        await saveHospitals();
+        await savePostings();
+        await saveApplications();
+        await saveReviewQueue();
+        await setData('chat-messages', chatMessages);
+        renderStats(); renderCalendar(); renderAppFilters(); renderApplications();
+        renderHospitals(); renderChat(); renderReviewQueue();
+        resultEl.style.color = 'var(--green)';
+        resultEl.textContent = '복원 완료했어요.';
+        showToast('데이터를 복원했어요');
+      }catch(err){
+        resultEl.style.color = 'var(--red)';
+        resultEl.textContent = '파일을 읽는 데 실패했어요. 올바른 백업 파일인지 확인해주세요.';
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  /* ================= INIT ================= */
+  async function init(){
+    hospitals = await getData('hospitals-data', null);
+    if(!hospitals){
+      hospitals = DEFAULT_HOSPITALS.slice();
+      await saveHospitals();
+    } else {
+      var needsMigration = false;
+      hospitals.forEach(function(h, idx){
+        if(!h.color){ h.color = nextPaletteColor(idx); needsMigration = true; }
+      });
+      if(needsMigration){ await saveHospitals(); }
+    }
+    postings = await getData('postings-data', []);
+    applications = await getData('applications-data', []);
+    chatMessages = await getData('chat-messages', []);
+    reviewQueue = await getData('review-queue', []);
+
+    renderStats();
+    renderCalendar();
+    renderAppFilters();
+    renderApplications();
+    renderHospitals();
+    renderChat();
+    renderReviewQueue();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
