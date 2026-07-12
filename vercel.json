@@ -3,6 +3,10 @@
   "functions": {
     "api/chat.js": {
       "regions": ["icn1"]
+    },
+    "api/scan.js": {
+      "regions": ["icn1"],
+      "maxDuration": 60
     }
   }
 }
