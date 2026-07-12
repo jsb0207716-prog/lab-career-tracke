@@ -376,11 +376,21 @@
       <div class="subview active" id="subview-auto">
         <div class="auto-box">
           <p>
-            버튼을 누르면 <b>등록된 병원 이름을 담은 검색 요청 문구</b>가 클립보드에 복사돼요.
-            이 사이트 자체는 병원 사이트를 자동으로 긁어올 수 없어서, 복사된 문구를 <a class="plainlink" href="https://claude.ai" target="_blank" rel="noopener">Claude.ai</a>나 다른 AI 챗봇에 붙여넣어 검색을 부탁한 다음,
+            <b>병원 사이트를 Gemini가 직접 읽어서</b> 임상병리사·진단검사의학과·병리과·생리과 공고를 찾아 대기열에 자동으로 채워줘요.
+            일부 사이트는 구조상 못 읽어올 수 있어서, 결과는 항상 아래 <b>등록 대기열</b>에서 한 번 확인하고 캘린더에 추가해주세요.
+            병원 20곳을 훑는 데 30초~1분 정도 걸려요.
+          </p>
+          <button class="btn btn-primary btn-sm" id="scanAllBtn">🤖 전체 병원 AI 자동검색 시작</button>
+          <div id="scanAllResult" style="margin-top:8px;font-size:12.5px;font-weight:600;"></div>
+        </div>
+
+        <div class="auto-box" style="background:var(--surface-soft);border-style:solid;">
+          <p>
+            AI 자동검색이 안 될 때 대안이에요. 버튼을 누르면 <b>등록된 병원 이름을 담은 검색 요청 문구</b>가 클립보드에 복사돼요.
+            복사된 문구를 <a class="plainlink" href="https://claude.ai" target="_blank" rel="noopener">Claude.ai</a>나 다른 AI 챗봇에 붙여넣어 검색을 부탁한 다음,
             돌아온 JSON 코드를 아래 상자에 붙여넣으면 <b>등록 대기열</b>에서 확인 후 캘린더에 추가할 수 있어요.
           </p>
-          <button class="btn btn-primary btn-sm" id="autoSearchBtn">🔍 검색 요청 문구 복사하기</button>
+          <button class="btn btn-sm" id="autoSearchBtn">🔍 검색 요청 문구 복사하기</button>
           <div class="field" style="margin-top:14px;">
             <label for="queueImportArea">검색 결과 JSON 붙여넣기</label>
             <textarea id="queueImportArea" placeholder='[{"hospital":"...","date":"...","title":"...","deadline":"...","link":"...","memo":"..."}]' style="min-height:100px;font-family:var(--font-mono);font-size:12px;"></textarea>
@@ -538,6 +548,7 @@
      (같이 드린 api/chat.js + vercel.json 파일 + 안내를 참고해서 배포한 뒤,
       아래 주소를 "https://본인프로젝트명.vercel.app/api/chat" 형태로 바꿔주세요 — 끝에 /api/chat 꼭 붙여야 해요) */
   var AI_WORKER_URL = 'https://lab-career-tracke.vercel.app/api/chat';
+  var AI_SCAN_URL = AI_WORKER_URL.replace(/\/api\/chat\/?$/, '/api/scan');
 
   var STORAGE_PREFIX = 'labCareerTracker:';
   function getLocal(key, fallback){
@@ -1178,6 +1189,69 @@
 
   /* ================= AUTO SEARCH / REVIEW QUEUE ================= */
   async function saveReviewQueue(){ await setData('review-queue', reviewQueue); }
+
+  document.getElementById('scanAllBtn').addEventListener('click', async function(){
+    var btn = document.getElementById('scanAllBtn');
+    var resultEl = document.getElementById('scanAllResult');
+    var targets = hospitals.filter(function(h){ return h.category !== '채용포털'; })
+      .map(function(h){ return { name: h.name, link: h.link }; });
+
+    if(!targets.length){ resultEl.style.color='var(--red)'; resultEl.textContent='등록된 병원이 없어요.'; return; }
+    if(!AI_SCAN_URL || AI_SCAN_URL.indexOf('YOUR-PROJECT-NAME') !== -1){
+      resultEl.style.color='var(--red)';
+      resultEl.textContent = 'AI_WORKER_URL이 아직 설정 안 됐어요 (코드 상단 참고).';
+      return;
+    }
+
+    btn.disabled = true;
+    resultEl.style.color = 'var(--ink-soft)';
+    resultEl.textContent = '검색 중이에요... (최대 1분 정도 걸려요)';
+
+    try{
+      var response = await fetch(AI_SCAN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hospitals: targets })
+      });
+      if(!response.ok){ throw new Error('scan_error_' + response.status); }
+      var data = await response.json();
+      if(data.error){ throw new Error(data.error); }
+
+      var found = Array.isArray(data.results) ? data.results : [];
+      var added = 0;
+      found.forEach(function(item){
+        if(!item || !item.hospital || !item.title) return;
+        // 이미 대기열에 같은 병원+제목이 있으면 건너뛰기 (중복 방지)
+        var dup = reviewQueue.some(function(q){ return q.hospital === item.hospital && q.title === item.title; });
+        if(dup) return;
+        reviewQueue.push({
+          id: uid('q'),
+          hospital: item.hospital,
+          date: item.date || '',
+          deadline: item.deadline || '',
+          title: item.title || '채용공고',
+          link: item.link || '',
+          memo: item.memo || ''
+        });
+        added++;
+      });
+      saveReviewQueue();
+      renderReviewQueue();
+
+      resultEl.style.color = 'var(--green)';
+      resultEl.textContent = added > 0
+        ? ('완료! 새 공고 ' + added + '건을 대기열에 담았어요. 아래에서 확인해주세요.')
+        : '완료! 지금 시점에는 새로 발견된 공고가 없었어요.';
+      if(data.errors && data.errors.length){
+        resultEl.textContent += ' (일부 병원은 확인하지 못했어요: ' + data.errors.length + '건)';
+      }
+    }catch(err){
+      resultEl.style.color = 'var(--red)';
+      resultEl.textContent = '검색 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.';
+    }finally{
+      btn.disabled = false;
+    }
+  });
 
   document.getElementById('autoSearchBtn').addEventListener('click', function(){
     var names = hospitals.map(function(h){ return h.name; }).join(', ');
