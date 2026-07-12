@@ -534,9 +534,10 @@
 
   /* ---------------- AI proxy config ----------------
      GitHub Pages(정적 사이트)는 API 키를 안전하게 숨길 서버가 없어요.
-     그래서 Cloudflare Worker 같은 작은 프록시 서버를 하나 두고, 그 서버 주소를 여기 넣어주세요.
-     (같이 드린 worker.js 파일 + 안내를 참고해서 배포한 뒤, 아래 주소만 본인 것으로 바꾸면 돼요) */
-  var AI_WORKER_URL = 'https://lab-tracker-ai.jsb02076.workers.dev/';
+     그래서 Vercel Serverless Function(서울 리전 고정)을 프록시로 두고, 그 주소를 여기 넣어주세요.
+     (같이 드린 api/chat.js + vercel.json 파일 + 안내를 참고해서 배포한 뒤,
+      아래 주소를 "https://본인프로젝트명.vercel.app/api/chat" 형태로 바꿔주세요 — 끝에 /api/chat 꼭 붙여야 해요) */
+  var AI_WORKER_URL = 'https://YOUR-PROJECT-NAME.vercel.app/api/chat';
 
   var STORAGE_PREFIX = 'labCareerTracker:';
   function getLocal(key, fallback){
@@ -569,7 +570,7 @@
      messages: [{role:'user'|'assistant', content:'...'}], system: string
      Returns the reply text, or throws on failure. */
   async function callAI(system, messages){
-    if(!AI_WORKER_URL || AI_WORKER_URL.indexOf('YOUR-WORKER-NAME') !== -1){
+    if(!AI_WORKER_URL || AI_WORKER_URL.indexOf('YOUR-PROJECT-NAME') !== -1){
       throw new Error('worker_not_configured');
     }
     var response = await fetch(AI_WORKER_URL, {
