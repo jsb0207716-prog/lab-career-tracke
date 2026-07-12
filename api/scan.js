@@ -50,7 +50,8 @@ export default async function handler(req, res) {
         `오늘 날짜는 ${todayStr}야. 아래 병원들의 채용 페이지를 각각 확인해서, ` +
         `현재 지원 가능한(마감되지 않은) 임상병리사/진단검사의학과/병리과/생리과 관련 채용공고가 있는지 찾아줘.\n\n` +
         `${urlList}\n\n` +
-        `찾은 공고만 JSON 배열로 응답해. 없으면 빈 배열 []을 응답해. ` +
+        `반드시 순수한 JSON 배열만 출력해. 다른 설명, 인사말, 마크다운 코드블럭 기호(\`\`\`) 없이 JSON만 출력해. ` +
+        `찾은 공고만 배열에 담아. 없으면 빈 배열 []만 출력해. ` +
         `각 항목은 hospital(병원명, 위 목록의 이름과 동일하게), date(공고일 또는 확인 불가시 빈 문자열, YYYY-MM-DD 형식), ` +
         `title(공고 제목), deadline(마감일, 확인 불가시 빈 문자열, YYYY-MM-DD 형식), link(해당 공고의 실제 URL, 모르면 위 병원 링크 그대로), ` +
         `memo(부서·자격요건 등을 한 줄로 요약) 필드를 가져야 해.`;
@@ -64,23 +65,6 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: prompt }] }],
               tools: [{ url_context: {} }],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                  type: 'ARRAY',
-                  items: {
-                    type: 'OBJECT',
-                    properties: {
-                      hospital: { type: 'STRING' },
-                      date: { type: 'STRING' },
-                      title: { type: 'STRING' },
-                      deadline: { type: 'STRING' },
-                      link: { type: 'STRING' },
-                      memo: { type: 'STRING' },
-                    },
-                  },
-                },
-              },
             }),
           }
         );
@@ -90,7 +74,8 @@ export default async function handler(req, res) {
           errors.push(data.error?.message || 'batch failed');
           continue;
         }
-        const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '[]';
+        let text = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '[]';
+        text = text.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
         const parsed = JSON.parse(text);
         if (Array.isArray(parsed)) allResults = allResults.concat(parsed);
       } catch (batchErr) {
