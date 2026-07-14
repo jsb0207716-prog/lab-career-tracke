@@ -282,10 +282,26 @@
   .bigtext-area{min-height:56vh;font-size:14.5px;line-height:1.65;}
   .bigtext-preview{
     min-height:56vh;max-height:56vh;overflow-y:auto;border:1px solid var(--line);border-radius:7px;
-    padding:12px 14px;font-size:14.5px;line-height:1.75;background:#fdfaf9;white-space:pre-wrap;
+    padding:12px 14px;font-size:14.5px;line-height:1.75;background:#fdfaf9;
   }
-  .bigtext-preview strong{color:var(--teal-deep);}
   .bigtext-hidden{display:none;}
+
+  /* ---------- Markdown rendering (미리보기, AI 상담 답변 공통) ---------- */
+  .md-h{font-family:var(--font-mono);color:var(--teal-deep);font-weight:700;margin:16px 0 8px;line-height:1.35;}
+  .md-h:first-child{margin-top:0;}
+  .md-h1{font-size:20px;}
+  .md-h2{font-size:17.5px;}
+  .md-h3{font-size:15.5px;}
+  .md-h4,.md-h5,.md-h6{font-size:14px;}
+  .bigtext-preview p, .chat-bubble.assistant p{margin:0 0 10px;}
+  .bigtext-preview p:last-child, .chat-bubble.assistant p:last-child{margin-bottom:0;}
+  .bigtext-preview ul, .bigtext-preview ol, .chat-bubble.assistant ul, .chat-bubble.assistant ol{margin:0 0 10px;padding-left:20px;}
+  .bigtext-preview li, .chat-bubble.assistant li{margin-bottom:3px;}
+  .md-hr{border:none;border-top:1px dashed var(--line);margin:14px 0;}
+  .md-table{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:13px;}
+  .md-table th, .md-table td{border:1px solid var(--line);padding:6px 9px;text-align:left;}
+  .md-table th{background:var(--surface-soft);color:var(--teal-deep);font-weight:700;}
+  .bigtext-preview strong, .chat-bubble.assistant strong{color:var(--teal-deep);}
 
   /* ---------- Chat ---------- */
   .chat-context-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;}
@@ -643,14 +659,107 @@
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
-  /* very small markdown renderer: **bold**, *italic*, line breaks.
-     Escapes HTML first so nothing unsafe ever gets injected. */
-  function renderMarkdown(s){
+  /* inline markdown: **bold**, *italic*. Escapes HTML first so nothing unsafe gets injected. */
+  function renderMarkdownInline(s){
     var escaped = escapeHtml(s||'');
     escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     escaped = escaped.replace(/(^|[^*])\*(?!\*)([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
-    escaped = escaped.replace(/\n/g, '<br>');
     return escaped;
+  }
+  function isTableSepLine(line){
+    var t = line.trim();
+    if(!t || !/^\|?[\-:\s|]+\|?$/.test(t)) return false;
+    return t.indexOf('-') !== -1;
+  }
+  function splitTableRow(line){
+    var t = line.trim().replace(/^\|/,'').replace(/\|$/,'');
+    return t.split('|').map(function(c){ return c.trim(); });
+  }
+  /* block-level markdown renderer: heading, hr, table, list, bold/italic, paragraph.
+     Escapes HTML so nothing unsafe is injected. */
+  function renderMarkdown(s){
+    var lines = String(s||'').replace(/\r\n/g,'\n').split('\n');
+    var out = [];
+    var para = [];
+    var list = null; // {type:'ul'|'ol', items:[]}
+
+    function flushPara(){
+      if(para.length){ out.push('<p>'+renderMarkdownInline(para.join(' '))+'</p>'); para = []; }
+    }
+    function flushList(){
+      if(list){
+        out.push('<'+list.type+'>'+list.items.map(function(it){ return '<li>'+renderMarkdownInline(it)+'</li>'; }).join('')+'</'+list.type+'>');
+        list = null;
+      }
+    }
+
+    var i = 0;
+    while(i < lines.length){
+      var line = lines[i];
+
+      // table: header row + separator row
+      if(/^\s*\|.*\|\s*$/.test(line) && i+1 < lines.length && isTableSepLine(lines[i+1])){
+        flushPara(); flushList();
+        var headCells = splitTableRow(line);
+        i += 2;
+        var bodyRows = [];
+        while(i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])){
+          bodyRows.push(splitTableRow(lines[i]));
+          i++;
+        }
+        var thead = '<thead><tr>'+headCells.map(function(c){ return '<th>'+renderMarkdownInline(c)+'</th>'; }).join('')+'</tr></thead>';
+        var tbody = '<tbody>'+bodyRows.map(function(r){ return '<tr>'+r.map(function(c){ return '<td>'+renderMarkdownInline(c)+'</td>'; }).join('')+'</tr>'; }).join('')+'</tbody>';
+        out.push('<table class="md-table">'+thead+tbody+'</table>');
+        continue;
+      }
+
+      // heading
+      var hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if(hm){
+        flushPara(); flushList();
+        var level = hm[1].length;
+        out.push('<h'+level+' class="md-h md-h'+level+'">'+renderMarkdownInline(hm[2])+'</h'+level+'>');
+        i++; continue;
+      }
+
+      // horizontal rule
+      if(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)){
+        flushPara(); flushList();
+        out.push('<hr class="md-hr">');
+        i++; continue;
+      }
+
+      // unordered list item
+      var ulm = line.match(/^\s*[*\-]\s+(.*)$/);
+      if(ulm){
+        flushPara();
+        if(!list || list.type !== 'ul'){ flushList(); list = {type:'ul', items:[]}; }
+        list.items.push(ulm[1]);
+        i++; continue;
+      }
+
+      // ordered list item
+      var olm = line.match(/^\s*\d+\.\s+(.*)$/);
+      if(olm){
+        flushPara();
+        if(!list || list.type !== 'ol'){ flushList(); list = {type:'ol', items:[]}; }
+        list.items.push(olm[1]);
+        i++; continue;
+      }
+
+      // blank line -> paragraph/list break
+      if(/^\s*$/.test(line)){
+        flushPara(); flushList();
+        i++; continue;
+      }
+
+      // plain paragraph text
+      flushList();
+      para.push(line.trim());
+      i++;
+    }
+    flushPara(); flushList();
+    return out.join('');
   }
   function daysUntil(dateStr){
     if(!dateStr) return null;
@@ -663,15 +772,16 @@
      Opens a large modal for comfortable editing of long text (자소서, 면접 복기 등),
      with a toggle to preview bold/italic markdown rendering. onSave(newValue) is called on save. */
   function openBigTextEditor(title, initialValue, onSave){
+    var startVal = initialValue || '';
     openModal(
       '<h3>'+escapeHtml(title)+'</h3>'
       + '<div class="bigtext-tabs">'
-      + '<button class="bigtext-tab active" id="bigtextTabEdit">✏️ 편집</button>'
-      + '<button class="bigtext-tab" id="bigtextTabPreview">👁 미리보기</button>'
+      + '<button class="bigtext-tab" id="bigtextTabEdit">✏️ 편집</button>'
+      + '<button class="bigtext-tab active" id="bigtextTabPreview">👁 미리보기</button>'
       + '</div>'
-      + '<textarea id="bigtextArea" class="bigtext-area">'+escapeHtml(initialValue||'')+'</textarea>'
-      + '<div id="bigtextPreview" class="bigtext-preview bigtext-hidden"></div>'
-      + '<div class="save-hint" style="margin-top:8px;">**굵게** 처럼 쓰면 미리보기 탭에서 굵게 표시돼요. 저장을 눌러야 반영돼요.</div>'
+      + '<textarea id="bigtextArea" class="bigtext-area bigtext-hidden">'+escapeHtml(startVal)+'</textarea>'
+      + '<div id="bigtextPreview" class="bigtext-preview">'+(renderMarkdown(startVal) || '<span style="color:var(--ink-faint);">내용이 없어요.</span>')+'</div>'
+      + '<div class="save-hint" style="margin-top:8px;"># 제목, **굵게**, 목록, 표(| | |), --- 구분선까지 미리보기에 그대로 반영돼요. 저장을 눌러야 반영돼요.</div>'
       + '<div class="modal-close-row"><button class="btn" id="modalCancel">취소</button><button class="btn btn-primary" id="modalSave">저장</button></div>',
       true
     );
