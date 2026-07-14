@@ -143,7 +143,7 @@
   .cal-week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:0;}
   .cal-daybox{
     border:1px solid var(--line);background:#fff;padding:7px 9px;cursor:pointer;
-    transition:background .15s;
+    transition:background .15s;position:relative;
   }
   .cal-daybox:hover{background:var(--surface-soft);}
   .cal-daybox.out-of-month{background:transparent;border-color:transparent;cursor:default;}
@@ -153,6 +153,14 @@
   .cal-daybox.out-of-month .cal-daynum{color:var(--ink-faint);opacity:.5;}
   .cal-daybox.today .cal-daynum{color:var(--teal-deep);font-weight:700;}
 
+  .cal-day-add{
+    position:absolute;top:5px;right:5px;width:16px;height:16px;padding:0;line-height:15px;text-align:center;
+    border-radius:4px;border:none;background:var(--surface-soft);color:var(--teal-deep);font-size:12px;font-weight:700;
+    cursor:pointer;opacity:0;transition:opacity .15s, background .15s;
+  }
+  .cal-daybox:hover .cal-day-add{opacity:1;}
+  .cal-day-add:hover{background:var(--teal-soft);}
+
   .cal-bar-layer{position:absolute;left:0;right:0;top:28px;pointer-events:none;}
   .cal-bar{
     position:absolute;height:19px;border-radius:5px;font-size:11.5px;color:#fff;
@@ -161,9 +169,10 @@
   }
   .cal-bar.urgent-bar{background:var(--amber);}
 
+  .cal-aside-wrap{display:flex;flex-direction:column;gap:14px;position:sticky;top:16px;}
   .cal-aside{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-    padding:14px;box-shadow:var(--shadow);position:sticky;top:16px;
+    padding:14px;box-shadow:var(--shadow);
   }
   .urgent-header{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--teal-deep);margin-bottom:10px;letter-spacing:.02em;}
   .urgent-card{
@@ -174,6 +183,11 @@
   .urgent-hospital{font-size:12.5px;font-weight:700;}
   .urgent-jobtitle{font-size:11px;color:var(--ink-soft);margin:2px 0 6px;line-height:1.4;}
   .urgent-dday{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--amber);}
+  .urgent-more-btn{
+    width:100%;text-align:center;font-size:11.5px;font-weight:600;color:var(--teal-deep);
+    background:var(--surface-soft);border:none;border-radius:8px;padding:8px;cursor:pointer;margin-top:2px;
+  }
+  .urgent-more-btn:hover{background:var(--teal-soft);}
 
   /* ---------- Applications ---------- */
   .app-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
@@ -319,9 +333,112 @@
   .chat-input-row textarea{flex:1;min-height:56px;max-height:140px;}
   .chat-empty{color:var(--ink-faint);font-size:13px;text-align:center;margin:auto;}
 
+  /* ---------- Calendar day todo badge ---------- */
+  .cal-todo-dot{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:14px;height:14px;padding:0 3px;margin-left:4px;border-radius:7px;
+    background:var(--violet);color:#fff;font-size:9px;font-weight:700;vertical-align:middle;
+    cursor:pointer;line-height:14px;
+  }
+
+  /* ---------- Todo section (calendar sidebar) ---------- */
+  .todo-section{}
+  .todo-header-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .todo-header{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--teal-deep);letter-spacing:.02em;}
+  .todo-date-label{font-size:11px;color:var(--ink-soft);}
+  .todo-date-input{width:auto;font-size:11.5px;padding:4px 6px;}
+  .todo-list{margin-bottom:10px;}
+  .todo-item{
+    display:flex;align-items:flex-start;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line);
+  }
+  .todo-item:last-child{border-bottom:none;}
+  .todo-check{
+    flex-shrink:0;width:16px;height:16px;margin-top:2px;border-radius:4px;border:1.5px solid var(--ink-faint);
+    background:#fff;cursor:pointer;position:relative;appearance:none;-webkit-appearance:none;
+  }
+  .todo-check:checked{background:var(--green);border-color:var(--green);}
+  .todo-check:checked::after{
+    content:'✓';position:absolute;top:-3px;left:1.5px;color:#fff;font-size:11px;font-weight:700;
+  }
+  .todo-text{flex:1;font-size:12.5px;line-height:1.5;word-break:break-word;}
+  .todo-item.done .todo-text{color:var(--ink-faint);text-decoration:line-through;}
+  .todo-del{flex-shrink:0;background:transparent;border:none;color:var(--ink-faint);cursor:pointer;font-size:13px;padding:0 2px;}
+  .todo-del:hover{color:var(--red);}
+  .todo-add-row{display:flex;gap:6px;}
+  .todo-add-row input{flex:1;font-size:12.5px;padding:7px 9px;}
+  .todo-add-row button{flex-shrink:0;}
+  .todo-empty{font-size:11.5px;color:var(--ink-faint);padding:8px 2px;}
+
+  /* ---------- Theme customization ---------- */
+  .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:760px){ .theme-grid{grid-template-columns:1fr;} }
+  .theme-swatches{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .theme-swatch{
+    width:64px;cursor:pointer;border:2px solid transparent;border-radius:10px;padding:4px;text-align:center;
+  }
+  .theme-swatch.active{border-color:var(--teal-deep);}
+  .theme-swatch-preview{width:100%;height:36px;border-radius:6px;border:1px solid rgba(0,0,0,.08);margin-bottom:4px;}
+  .theme-swatch-name{font-size:10.5px;color:var(--ink-soft);}
+  .theme-bg-preview{
+    width:100%;height:120px;border-radius:10px;border:1px solid var(--line);background-size:cover;background-position:center;
+    background-color:var(--surface-soft);display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:12px;margin-bottom:10px;
+  }
+
+  /* ---------- Compact music bar (topbar) ---------- */
+  .music-bar-wrap{position:relative;flex:1;min-width:230px;max-width:440px;}
+  .music-bar{
+    display:flex;align-items:center;gap:2px;
+    background:linear-gradient(135deg, var(--surface-soft), var(--surface));
+    border-radius:999px;padding:6px 8px 6px 12px;box-shadow:var(--shadow);
+  }
+  .music-btn{
+    background:transparent;border:none;color:var(--teal-deep);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
+    font-size:14px;line-height:1;transition:background .15s, transform .1s, color .15s;flex-shrink:0;
+  }
+  .music-btn:hover{background:var(--teal-soft);}
+  .music-btn:active{transform:scale(.92);}
+  .music-btn:disabled{color:var(--ink-faint);cursor:default;}
+  .music-btn:disabled:hover{background:transparent;transform:none;}
+  .music-btn-play{width:30px;height:30px;background:var(--teal);color:#fff;font-size:13px;}
+  .music-btn-play:hover{background:var(--teal-deep);}
+  .music-btn-repeat.active{color:var(--teal-deep);background:var(--teal-soft);}
+  .music-track-title{
+    flex:1;min-width:0;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;
+  }
+  .music-track-title.playing{color:var(--teal-deep);font-weight:600;}
+  .music-btn-add{
+    font-size:17px;font-weight:600;color:var(--ink-soft);border:1px solid var(--line);background:#fff;
+  }
+  .music-btn-add:hover{background:var(--surface-soft);color:var(--teal-deep);}
+  .music-btn-add.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+  .music-popover{
+    position:absolute;top:calc(100% + 10px);left:0;right:0;
+    background:var(--surface);border-radius:14px;box-shadow:0 18px 44px rgba(58,36,36,.2);
+    padding:14px;z-index:45;display:none;
+  }
+  .music-popover.open{display:block;animation:fadein .15s ease;}
+  .yt-add-row{display:flex;gap:6px;margin-bottom:10px;}
+  .yt-add-row input{flex:1;font-size:12.5px;padding:7px 9px;}
+  .yt-playlist{max-height:220px;overflow-y:auto;}
+  .yt-track{
+    display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px;cursor:pointer;font-size:12px;
+  }
+  .yt-track:hover{background:var(--surface-soft);}
+  .yt-track.playing{background:var(--teal-soft);font-weight:700;color:var(--teal-deep);}
+  .yt-track-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .yt-track-del{flex-shrink:0;background:transparent;border:none;color:var(--ink-faint);cursor:pointer;}
+  .yt-track-del:hover{color:var(--red);}
+  .yt-empty{font-size:11.5px;color:var(--ink-faint);padding:6px 2px;}
+  @media(max-width:760px){
+    .music-bar-wrap{order:3;max-width:none;flex-basis:100%;}
+  }
+
   @media(max-width:640px){
     .cal-layout{grid-template-columns:1fr;}
-    .cal-aside{order:-1;position:static;margin-bottom:14px;}
+    .cal-aside-wrap{order:-1;position:static;margin-bottom:14px;}
     .app-card-top{flex-direction:column;}
   }
 </style>
@@ -338,6 +455,24 @@
         <p>임상병리사 · 진단검사의학과 채용 관리 캘린더</p>
       </div>
     </div>
+    <div class="music-bar-wrap" id="musicBarWrap">
+      <div class="music-bar">
+        <button class="music-btn" id="ytPrevBtn" title="이전 곡" disabled>◁◁</button>
+        <button class="music-btn music-btn-play" id="ytPlayPauseBtn" title="재생" disabled>▷</button>
+        <button class="music-btn" id="ytNextBtn" title="다음 곡" disabled>▷▷</button>
+        <button class="music-btn music-btn-repeat" id="ytRepeatBtn" title="한 곡 반복">↻</button>
+        <div class="music-track-title" id="musicTrackTitle">재생목록이 비어있어요</div>
+        <button class="music-btn music-btn-add" id="ytAddToggleBtn" title="음원 추가">+</button>
+      </div>
+      <div class="music-popover" id="ytPopover">
+        <div class="yt-add-row">
+          <input type="text" id="ytUrlInput" placeholder="유튜브 링크 붙여넣기">
+          <button class="btn btn-primary btn-sm" id="ytAddBtn">추가</button>
+        </div>
+        <div class="yt-playlist" id="ytPlaylistList"></div>
+      </div>
+    </div>
+    <div id="ytPlayerHost" style="position:fixed;left:-9999px;top:-9999px;width:2px;height:2px;overflow:hidden;"></div>
     <div class="stats-strip" id="statsStrip"></div>
   </div>
 
@@ -351,6 +486,7 @@
     <button class="tab-btn" data-tab="hospitals">🏥 병원목록</button>
     <button class="tab-btn" data-tab="posting">📥 공고 등록</button>
     <button class="tab-btn" data-tab="chat">💬 AI 상담</button>
+    <button class="tab-btn" data-tab="theme">🎨 테마</button>
     <button class="tab-btn" data-tab="backup">💾 백업</button>
   </div>
 
@@ -370,9 +506,23 @@
         <div class="cal-dow-row" id="calDowRow"></div>
         <div id="calWeeks"></div>
       </div>
-      <aside class="cal-aside">
-        <div class="urgent-header">⏰ 마감임박 · 지금 지원해야 해요</div>
-        <div id="urgentList"></div>
+      <aside class="cal-aside-wrap">
+        <div class="cal-aside">
+          <div class="urgent-header">⏰ 마감임박 · 지금 지원해야 해요</div>
+          <div id="urgentList"></div>
+        </div>
+
+        <div class="cal-aside todo-section" id="todoSection">
+          <div class="todo-header-row">
+            <div class="todo-header">✅ 할 일 <span class="todo-date-label" id="todoDateLabel"></span></div>
+            <input type="date" id="todoDateInput" class="todo-date-input">
+          </div>
+          <div class="todo-list" id="todoList"></div>
+          <div class="todo-add-row">
+            <input type="text" id="todoInput" placeholder="할 일 추가 후 Enter">
+            <button class="btn btn-primary btn-sm" id="todoAddBtn">추가</button>
+          </div>
+        </div>
       </aside>
     </div>
   </div>
@@ -473,6 +623,50 @@
     </div>
   </div>
 
+  <!-- ================= THEME ================= -->
+  <div class="view" id="view-theme">
+    <div class="panel panel-pad">
+      <div class="cal-title" style="font-size:15px;margin-bottom:14px;">테마 · 배경화면 설정</div>
+      <div class="theme-grid">
+        <div>
+          <label>색상 테마</label>
+          <div class="theme-swatches" id="themeSwatches"></div>
+          <label>포인트 색상 직접 선택</label>
+          <div class="color-field-row" style="margin-bottom:16px;">
+            <input type="color" id="themeAccentPicker">
+            <input type="text" id="themeAccentText" placeholder="#RRGGBB">
+          </div>
+          <label>배경 색상</label>
+          <div class="color-field-row">
+            <input type="color" id="themeBgPicker">
+            <input type="text" id="themeBgText" placeholder="#RRGGBB">
+          </div>
+        </div>
+        <div>
+          <label>배경 이미지</label>
+          <div class="theme-bg-preview" id="themeBgPreview">미리보기</div>
+          <div class="field">
+            <input type="url" id="themeBgUrlInput" placeholder="이미지 URL 붙여넣기">
+          </div>
+          <div class="btn-row" style="margin-bottom:10px;">
+            <button class="btn btn-sm" id="themeBgUrlApplyBtn">URL 적용</button>
+            <label class="btn btn-sm" for="themeBgFileInput" style="margin:0;">파일 업로드</label>
+            <input type="file" id="themeBgFileInput" accept="image/*" style="display:none;">
+            <button class="btn btn-ghost btn-sm" id="themeBgClearBtn">배경 이미지 제거</button>
+          </div>
+          <div class="field">
+            <label for="themeBgOpacity">배경 위 화면 불투명도 (이미지가 너무 진하면 낮춰보세요)</label>
+            <input type="range" id="themeBgOpacity" min="40" max="100" step="5">
+          </div>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-danger btn-sm" id="themeResetBtn">기본 테마로 초기화</button>
+      </div>
+      <div class="save-hint" style="margin-top:8px;">테마는 이 브라우저에 자동 저장되고, 지원현황·병원목록 등 기존 데이터에는 영향을 주지 않아요.</div>
+    </div>
+  </div>
+
   <!-- ================= BACKUP / RESTORE ================= -->
   <div class="view" id="view-backup">
     <div class="panel panel-pad">
@@ -501,6 +695,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 (function(){
   "use strict";
@@ -558,6 +753,11 @@
   var today = new Date();
   var calYear = today.getFullYear();
   var calMonth = today.getMonth() + 1; // 1-12
+  var todos = [];
+  var selectedTodoDate = fmtDate(today.getFullYear(), today.getMonth()+1, today.getDate());
+  var themeSettings = null;
+  var ytPlaylist = [];
+  var ytCurrentIndex = -1;
 
   /* ---------------- storage helpers ---------------- */
   function uid(prefix){
@@ -619,6 +819,9 @@
   }
   async function savePostings(){ await setData('postings-data', postings); }
   async function saveApplications(){ await setData('applications-data', applications); }
+  async function saveTodos(){ await setData('todos-data', todos); }
+  async function saveTheme(){ await setData('theme-settings', themeSettings); }
+  async function saveYtPlaylist(){ await setData('yt-playlist-data', ytPlaylist); }
 
   /* ---------------- toast ---------------- */
   var toastTimer = null;
@@ -918,8 +1121,11 @@
         var dateStr = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
         var inMonth = (d.getMonth()+1 === calMonth) && (d.getFullYear() === calYear);
         var isToday = dateStr === todayStr;
+        var dTodos = todos.filter(function(t){ return t.date === dateStr; });
+        var todoBadge = dTodos.length ? ('<span class="cal-todo-dot" data-todo-date="'+dateStr+'" title="할 일 '+dTodos.length+'개">'+dTodos.length+'</span>') : '';
+        var addBtn = inMonth ? ('<button class="cal-day-add" data-add-date="'+dateStr+'" title="이 날짜에 공고 추가">+</button>') : '';
         daysHtml += '<div class="cal-daybox'+(inMonth?'':' out-of-month')+(isToday?' today':'')+'" style="min-height:'+weekMinHeight+'px;" data-date="'+dateStr+'" data-inmonth="'+(inMonth?'1':'0')+'">'
-          + '<div class="cal-daynum">'+d.getDate()+'</div></div>';
+          + '<div class="cal-daynum">'+d.getDate()+todoBadge+'</div>' + addBtn + '</div>';
       }
 
       var barsHtml = placed.map(function(pl){
@@ -948,8 +1154,16 @@
     document.getElementById('calWeeks').innerHTML = weeksHtml;
 
     document.querySelectorAll('.cal-daybox[data-inmonth="1"]').forEach(function(box){
-      box.addEventListener('click', function(){
-        openPostingModal({id:null, hospitalId:hospitals[0]?hospitals[0].id:'', date:box.dataset.date, title:'', deadline:'', link:'', memo:''}, '이 날짜에 공고 추가');
+      box.addEventListener('click', function(e){
+        if(e.target.closest('[data-add-date]')) return;
+        selectedTodoDate = box.dataset.date;
+        renderTodos();
+      });
+    });
+    document.querySelectorAll('[data-add-date]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        openPostingModal({id:null, hospitalId:hospitals[0]?hospitals[0].id:'', date:btn.dataset.addDate, title:'', deadline:'', link:'', memo:''}, '이 날짜에 공고 추가');
       });
     });
     document.querySelectorAll('.cal-bar').forEach(function(bar){
@@ -957,6 +1171,15 @@
         e.stopPropagation();
         var p = postings.find(function(x){ return x.id === bar.dataset.postingId; });
         if(p) openPostingDetailModal(p);
+      });
+    });
+    document.querySelectorAll('.cal-todo-dot').forEach(function(dot){
+      dot.addEventListener('click', function(e){
+        e.stopPropagation();
+        selectedTodoDate = dot.dataset.todoDate;
+        renderTodos();
+        var todoSection = document.getElementById('todoSection');
+        if(todoSection) todoSection.scrollIntoView({behavior:'smooth', block:'nearest'});
       });
     });
 
@@ -982,34 +1205,59 @@
     }
   }
 
-  function renderUrgentSidebar(){
-    var urgent = postings.filter(function(p){
+  var URGENT_VISIBLE_LIMIT = 3;
+  function getUrgentPostings(){
+    return postings.filter(function(p){
       if(!p.deadline) return false;
       var d = daysUntil(p.deadline);
       return d !== null && d >= 0 && d <= 3;
     }).sort(function(a,b){ return daysUntil(a.deadline) - daysUntil(b.deadline); });
-
-    var listEl = document.getElementById('urgentList');
-    if(!urgent.length){
-      listEl.innerHTML = '<div class="empty-state" style="padding:20px 8px;">마감 3일 이내 공고가 없어요.</div>';
-      return;
-    }
-    listEl.innerHTML = urgent.map(function(p){
-      var h = hospitalById(p.hospitalId);
-      var name = h ? h.name : (p.hospitalName || '(미상)');
-      var d = daysUntil(p.deadline);
-      return '<div class="urgent-card" data-posting-id="'+p.id+'">'
-        + '<div class="urgent-hospital">'+escapeHtml(name)+'</div>'
-        + '<div class="urgent-jobtitle">'+escapeHtml(p.title||'')+'</div>'
-        + '<div class="urgent-dday">'+(d===0?'오늘 마감':'D-'+d)+'</div>'
-        + '</div>';
-    }).join('');
-    listEl.querySelectorAll('.urgent-card').forEach(function(card){
+  }
+  function urgentCardHtml(p){
+    var h = hospitalById(p.hospitalId);
+    var name = h ? h.name : (p.hospitalName || '(미상)');
+    var d = daysUntil(p.deadline);
+    return '<div class="urgent-card" data-posting-id="'+p.id+'">'
+      + '<div class="urgent-hospital">'+escapeHtml(name)+'</div>'
+      + '<div class="urgent-jobtitle">'+escapeHtml(p.title||'')+'</div>'
+      + '<div class="urgent-dday">'+(d===0?'오늘 마감':'D-'+d)+'</div>'
+      + '</div>';
+  }
+  function bindUrgentCardClicks(container){
+    container.querySelectorAll('.urgent-card').forEach(function(card){
       card.addEventListener('click', function(){
         var p = postings.find(function(x){ return x.id === card.dataset.postingId; });
         if(p) openPostingDetailModal(p);
       });
     });
+  }
+  function renderUrgentSidebar(){
+    var urgent = getUrgentPostings();
+    var listEl = document.getElementById('urgentList');
+    if(!urgent.length){
+      listEl.innerHTML = '<div class="empty-state" style="padding:20px 8px;">마감 3일 이내 공고가 없어요.</div>';
+      return;
+    }
+    var visible = urgent.slice(0, URGENT_VISIBLE_LIMIT);
+    var restCount = urgent.length - visible.length;
+    var html = visible.map(urgentCardHtml).join('');
+    if(restCount > 0){
+      html += '<button class="urgent-more-btn" id="urgentMoreBtn">+ '+restCount+'건 더보기</button>';
+    }
+    listEl.innerHTML = html;
+    bindUrgentCardClicks(listEl);
+    var moreBtn = document.getElementById('urgentMoreBtn');
+    if(moreBtn){
+      moreBtn.addEventListener('click', function(){
+        openModal(
+          '<h3>⏰ 마감임박 전체 ('+urgent.length+')</h3>'
+          + '<div id="urgentFullList">' + urgent.map(urgentCardHtml).join('') + '</div>'
+          + '<div class="modal-close-row"><button class="btn" id="modalCloseBtn">닫기</button></div>'
+        );
+        document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+        bindUrgentCardClicks(document.getElementById('urgentFullList'));
+      });
+    }
   }
 
   function openPostingDetailModal(p){
@@ -1104,6 +1352,89 @@
       renderCalendar();
       renderStats();
       showToast('저장했어요');
+    });
+  }
+
+  /* ================= TODO LIST ================= */
+  function todosForDate(dateStr){
+    return todos.filter(function(t){ return t.date === dateStr; })
+      .sort(function(a,b){ return (a.createdAt||'').localeCompare(b.createdAt||''); });
+  }
+  function formatTodoDateLabel(dateStr){
+    if(!dateStr) return '';
+    var d = parseDate(dateStr);
+    var mm = d.getMonth()+1, dd = d.getDate();
+    var dowLabel = DOW[d.getDay()];
+    return mm+'월 '+dd+'일 ('+dowLabel+')';
+  }
+  function renderTodos(){
+    var dateInput = document.getElementById('todoDateInput');
+    if(dateInput) dateInput.value = selectedTodoDate;
+    var labelEl = document.getElementById('todoDateLabel');
+    if(labelEl) labelEl.textContent = formatTodoDateLabel(selectedTodoDate);
+
+    var listEl = document.getElementById('todoList');
+    if(!listEl) return;
+    var dayTodos = todosForDate(selectedTodoDate);
+    if(!dayTodos.length){
+      listEl.innerHTML = '<div class="todo-empty">이 날짜에 등록된 할 일이 없어요.</div>';
+      return;
+    }
+    listEl.innerHTML = dayTodos.map(function(t){
+      return '<div class="todo-item'+(t.done?' done':'')+'" data-id="'+t.id+'">'
+        + '<input type="checkbox" class="todo-check" data-toggle-todo="'+t.id+'"'+(t.done?' checked':'')+'>'
+        + '<div class="todo-text">'+escapeHtml(t.text)+'</div>'
+        + '<button class="todo-del" data-del-todo="'+t.id+'">✕</button>'
+        + '</div>';
+    }).join('');
+
+    listEl.querySelectorAll('[data-toggle-todo]').forEach(function(chk){
+      chk.addEventListener('change', function(){
+        var t = todos.find(function(x){ return x.id === chk.dataset.toggleTodo; });
+        if(t){ t.done = chk.checked; saveTodos(); renderTodos(); renderCalendar(); }
+      });
+    });
+    listEl.querySelectorAll('[data-del-todo]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        todos = todos.filter(function(x){ return x.id !== btn.dataset.delTodo; });
+        saveTodos();
+        renderTodos();
+        renderCalendar();
+      });
+    });
+  }
+
+  function addTodo(text){
+    text = text.trim();
+    if(!text) return;
+    todos.push({id: uid('t'), date: selectedTodoDate, text: text, done:false, createdAt: new Date().toISOString()});
+    saveTodos();
+    renderTodos();
+    renderCalendar();
+  }
+
+  var todoDateInputEl = document.getElementById('todoDateInput');
+  if(todoDateInputEl){
+    todoDateInputEl.addEventListener('change', function(){
+      if(todoDateInputEl.value){ selectedTodoDate = todoDateInputEl.value; renderTodos(); }
+    });
+  }
+  var todoAddBtnEl = document.getElementById('todoAddBtn');
+  if(todoAddBtnEl){
+    todoAddBtnEl.addEventListener('click', function(){
+      var input = document.getElementById('todoInput');
+      addTodo(input.value);
+      input.value = '';
+    });
+  }
+  var todoInputEl = document.getElementById('todoInput');
+  if(todoInputEl){
+    todoInputEl.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        addTodo(todoInputEl.value);
+        todoInputEl.value = '';
+      }
     });
   }
 
@@ -1729,6 +2060,386 @@
     }
   }
 
+  /* ================= THEME ================= */
+  var THEME_DEFAULT = {
+    accent:'#E28A82', accentDeep:'#BF5449', accentSoft:'#FBE2DF',
+    bg:'#FDF2F0', surfaceSoft:'#FBE2DF', line:'#F5DCD7',
+    bgImage:'', bgOpacity:92
+  };
+  var THEME_PRESETS = [
+    {name:'로즈(기본)', accent:'#E28A82', accentDeep:'#BF5449', accentSoft:'#FBE2DF', bg:'#FDF2F0', surfaceSoft:'#FBE2DF', line:'#F5DCD7'},
+    {name:'세이지', accent:'#7FA88C', accentDeep:'#4C7A5C', accentSoft:'#E4F0E7', bg:'#F3F7F1', surfaceSoft:'#E4F0E7', line:'#DCEBE0'},
+    {name:'스카이', accent:'#6FA0C9', accentDeep:'#3E6E97', accentSoft:'#E3EEF7', bg:'#F1F6FB', surfaceSoft:'#E3EEF7', line:'#DAE9F4'},
+    {name:'라벤더', accent:'#A98CC9', accentDeep:'#75529B', accentSoft:'#EEE6F6', bg:'#F6F2FB', surfaceSoft:'#EEE6F6', line:'#E6D9F2'},
+    {name:'선셋', accent:'#E0A24E', accentDeep:'#B87A1F', accentSoft:'#FBEDD6', bg:'#FDF6EB', surfaceSoft:'#FBEDD6', line:'#F6E3C0'},
+    {name:'다크', accent:'#D98E7C', accentDeep:'#B85C46', accentSoft:'#3A2E2C', bg:'#1E1815', surfaceSoft:'#2A211E', line:'#3A2E2A'}
+  ];
+
+  function applyTheme(){
+    var t = themeSettings || THEME_DEFAULT;
+    var root = document.documentElement.style;
+    root.setProperty('--teal', t.accent);
+    root.setProperty('--teal-deep', t.accentDeep);
+    root.setProperty('--teal-soft', t.accentSoft);
+    root.setProperty('--bg', t.bg);
+    root.setProperty('--surface-soft', t.surfaceSoft);
+    root.setProperty('--line', t.line);
+    if(t.bgImage){
+      document.body.style.backgroundImage = 'linear-gradient(rgba(255,255,255,'+((100-(t.bgOpacity||92))/100)+'), rgba(255,255,255,'+((100-(t.bgOpacity||92))/100)+')), url("'+t.bgImage+'")';
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundAttachment = 'fixed';
+    } else {
+      document.body.style.backgroundImage = 'none';
+    }
+  }
+
+  function renderThemeSwatches(){
+    var wrap = document.getElementById('themeSwatches');
+    if(!wrap) return;
+    var t = themeSettings || THEME_DEFAULT;
+    wrap.innerHTML = THEME_PRESETS.map(function(p, idx){
+      var isActive = t.accent === p.accent && t.bg === p.bg;
+      return '<div class="theme-swatch'+(isActive?' active':'')+'" data-preset="'+idx+'">'
+        + '<div class="theme-swatch-preview" style="background:linear-gradient(135deg,'+p.bg+' 50%, '+p.accent+' 50%);"></div>'
+        + '<div class="theme-swatch-name">'+p.name+'</div></div>';
+    }).join('');
+    wrap.querySelectorAll('[data-preset]').forEach(function(el){
+      el.addEventListener('click', function(){
+        var p = THEME_PRESETS[parseInt(el.dataset.preset,10)];
+        themeSettings = Object.assign({}, themeSettings || THEME_DEFAULT, {
+          accent:p.accent, accentDeep:p.accentDeep, accentSoft:p.accentSoft,
+          bg:p.bg, surfaceSoft:p.surfaceSoft, line:p.line
+        });
+        applyTheme();
+        saveTheme();
+        renderThemeView();
+        showToast('테마를 적용했어요');
+      });
+    });
+  }
+
+  function renderThemeView(){
+    var t = themeSettings || THEME_DEFAULT;
+    renderThemeSwatches();
+    var accentPicker = document.getElementById('themeAccentPicker');
+    var accentText = document.getElementById('themeAccentText');
+    var bgPicker = document.getElementById('themeBgPicker');
+    var bgText = document.getElementById('themeBgText');
+    var bgPreview = document.getElementById('themeBgPreview');
+    var opacityInput = document.getElementById('themeBgOpacity');
+    if(accentPicker){ accentPicker.value = t.accentDeep; accentText.value = t.accentDeep; }
+    if(bgPicker){ bgPicker.value = t.bg; bgText.value = t.bg; }
+    if(opacityInput){ opacityInput.value = t.bgOpacity || 92; }
+    if(bgPreview){
+      if(t.bgImage){
+        bgPreview.style.backgroundImage = 'url("'+t.bgImage+'")';
+        bgPreview.textContent = '';
+      } else {
+        bgPreview.style.backgroundImage = 'none';
+        bgPreview.textContent = '설정된 배경 이미지가 없어요';
+      }
+    }
+  }
+
+  function updateThemeField(field, value){
+    themeSettings = Object.assign({}, themeSettings || THEME_DEFAULT);
+    themeSettings[field] = value;
+    applyTheme();
+    saveTheme();
+  }
+
+  var themeAccentPickerEl = document.getElementById('themeAccentPicker');
+  var themeAccentTextEl = document.getElementById('themeAccentText');
+  if(themeAccentPickerEl){
+    themeAccentPickerEl.addEventListener('input', function(){
+      themeAccentTextEl.value = themeAccentPickerEl.value;
+      themeSettings = Object.assign({}, themeSettings || THEME_DEFAULT, {accent:themeAccentPickerEl.value, accentDeep:themeAccentPickerEl.value});
+      applyTheme(); saveTheme();
+    });
+  }
+  if(themeAccentTextEl){
+    themeAccentTextEl.addEventListener('change', function(){
+      if(/^#[0-9a-fA-F]{6}$/.test(themeAccentTextEl.value)){
+        themeAccentPickerEl.value = themeAccentTextEl.value;
+        themeSettings = Object.assign({}, themeSettings || THEME_DEFAULT, {accent:themeAccentTextEl.value, accentDeep:themeAccentTextEl.value});
+        applyTheme(); saveTheme();
+      }
+    });
+  }
+  var themeBgPickerEl = document.getElementById('themeBgPicker');
+  var themeBgTextEl = document.getElementById('themeBgText');
+  if(themeBgPickerEl){
+    themeBgPickerEl.addEventListener('input', function(){
+      themeBgTextEl.value = themeBgPickerEl.value;
+      updateThemeField('bg', themeBgPickerEl.value);
+    });
+  }
+  if(themeBgTextEl){
+    themeBgTextEl.addEventListener('change', function(){
+      if(/^#[0-9a-fA-F]{6}$/.test(themeBgTextEl.value)){
+        themeBgPickerEl.value = themeBgTextEl.value;
+        updateThemeField('bg', themeBgTextEl.value);
+      }
+    });
+  }
+  var themeBgUrlApplyBtnEl = document.getElementById('themeBgUrlApplyBtn');
+  if(themeBgUrlApplyBtnEl){
+    themeBgUrlApplyBtnEl.addEventListener('click', function(){
+      var url = document.getElementById('themeBgUrlInput').value.trim();
+      if(!url){ showToast('이미지 URL을 입력해주세요'); return; }
+      updateThemeField('bgImage', url);
+      renderThemeView();
+      showToast('배경 이미지를 적용했어요');
+    });
+  }
+  var themeBgFileInputEl = document.getElementById('themeBgFileInput');
+  if(themeBgFileInputEl){
+    themeBgFileInputEl.addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        updateThemeField('bgImage', ev.target.result);
+        renderThemeView();
+        showToast('배경 이미지를 적용했어요');
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+  }
+  var themeBgClearBtnEl = document.getElementById('themeBgClearBtn');
+  if(themeBgClearBtnEl){
+    themeBgClearBtnEl.addEventListener('click', function(){
+      updateThemeField('bgImage', '');
+      renderThemeView();
+      showToast('배경 이미지를 제거했어요');
+    });
+  }
+  var themeBgOpacityEl = document.getElementById('themeBgOpacity');
+  if(themeBgOpacityEl){
+    themeBgOpacityEl.addEventListener('input', function(){
+      updateThemeField('bgOpacity', parseInt(themeBgOpacityEl.value,10));
+    });
+  }
+  var themeResetBtnEl = document.getElementById('themeResetBtn');
+  if(themeResetBtnEl){
+    themeResetBtnEl.addEventListener('click', function(){
+      if(!confirm('테마를 기본값으로 되돌릴까요?')) return;
+      themeSettings = Object.assign({}, THEME_DEFAULT);
+      applyTheme();
+      saveTheme();
+      renderThemeView();
+      showToast('기본 테마로 되돌렸어요');
+    });
+  }
+
+  /* ================= YOUTUBE PLAYLIST (compact bar) ================= */
+  function parseYoutubeId(url){
+    if(!url) return null;
+    url = url.trim();
+    var m = url.match(/youtu\.be\/([A-Za-z0-9_\-]{6,})/);
+    if(m) return m[1];
+    m = url.match(/[?&]v=([A-Za-z0-9_\-]{6,})/);
+    if(m) return m[1];
+    m = url.match(/embed\/([A-Za-z0-9_\-]{6,})/);
+    if(m) return m[1];
+    if(/^[A-Za-z0-9_\-]{10,}$/.test(url)) return url;
+    return null;
+  }
+
+  var ytPlayer = null;
+  var ytApiReady = false;
+  var ytRepeat = false;
+  var ytPendingPlayIdx = -1;
+
+  window.onYouTubeIframeAPIReady = function(){
+    ytApiReady = true;
+    initYtPlayer();
+  };
+  function initYtPlayer(){
+    if(!ytApiReady || ytPlayer || typeof YT === 'undefined' || !YT.Player) return;
+    ytPlayer = new YT.Player('ytPlayerHost', {
+      height:'2', width:'2', playerVars:{playsinline:1},
+      events:{
+        onReady:function(){
+          if(ytPendingPlayIdx > -1){ var i = ytPendingPlayIdx; ytPendingPlayIdx = -1; playYtTrack(i); }
+        },
+        onStateChange:function(e){
+          if(e.data === YT.PlayerState.ENDED){
+            if(ytRepeat){ playYtTrack(ytCurrentIndex); }
+            else { ytNext(); }
+          }
+          updateMusicBarUI();
+        }
+      }
+    });
+  }
+
+  function renderYtPlaylist(){
+    var listEl = document.getElementById('ytPlaylistList');
+    if(!listEl) return;
+    if(!ytPlaylist.length){
+      listEl.innerHTML = '<div class="yt-empty">등록된 영상이 없어요. 유튜브 링크를 붙여넣어 추가해보세요.</div>';
+      updateMusicBarUI();
+      return;
+    }
+    listEl.innerHTML = ytPlaylist.map(function(track, idx){
+      return '<div class="yt-track'+(idx===ytCurrentIndex?' playing':'')+'" data-yt-idx="'+idx+'">'
+        + '<span class="yt-track-title">'+(idx===ytCurrentIndex?'▶ ':'')+escapeHtml(track.title||track.videoId)+'</span>'
+        + '<button class="yt-track-del" data-yt-del="'+idx+'">✕</button>'
+        + '</div>';
+    }).join('');
+    listEl.querySelectorAll('[data-yt-idx]').forEach(function(row){
+      row.addEventListener('click', function(e){
+        if(e.target.closest('[data-yt-del]')) return;
+        playYtTrack(parseInt(row.dataset.ytIdx,10));
+      });
+    });
+    listEl.querySelectorAll('[data-yt-del]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var idx = parseInt(btn.dataset.ytDel,10);
+        ytPlaylist.splice(idx,1);
+        if(ytCurrentIndex === idx){
+          ytCurrentIndex = -1;
+          if(ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+        } else if(ytCurrentIndex > idx){ ytCurrentIndex--; }
+        saveYtPlaylist();
+        renderYtPlaylist();
+      });
+    });
+    updateMusicBarUI();
+  }
+
+  function updateMusicBarUI(){
+    var titleEl = document.getElementById('musicTrackTitle');
+    var playBtn = document.getElementById('ytPlayPauseBtn');
+    var prevBtn = document.getElementById('ytPrevBtn');
+    var nextBtn = document.getElementById('ytNextBtn');
+    if(!titleEl) return;
+    var hasList = ytPlaylist.length > 0;
+    prevBtn.disabled = !hasList;
+    nextBtn.disabled = !hasList;
+    playBtn.disabled = !hasList;
+
+    var isPlaying = ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === 1;
+    playBtn.textContent = isPlaying ? '❚❚' : '▷';
+    playBtn.title = isPlaying ? '일시정지' : '재생';
+
+    if(ytCurrentIndex > -1 && ytPlaylist[ytCurrentIndex]){
+      titleEl.textContent = ytPlaylist[ytCurrentIndex].title || ytPlaylist[ytCurrentIndex].videoId;
+      titleEl.classList.toggle('playing', isPlaying);
+    } else {
+      titleEl.textContent = hasList ? '곡을 선택해주세요' : '재생목록이 비어있어요';
+      titleEl.classList.remove('playing');
+    }
+  }
+
+  function playYtTrack(idx){
+    if(idx < 0 || idx >= ytPlaylist.length) return;
+    ytCurrentIndex = idx;
+    var track = ytPlaylist[idx];
+    if(ytPlayer && ytPlayer.loadVideoById){
+      ytPlayer.loadVideoById(track.videoId);
+      ytPlayer.playVideo();
+    } else {
+      ytPendingPlayIdx = idx;
+      initYtPlayer();
+    }
+    renderYtPlaylist();
+  }
+
+  function ytPrev(){
+    if(!ytPlaylist.length) return;
+    var next = ytCurrentIndex <= 0 ? ytPlaylist.length-1 : ytCurrentIndex-1;
+    playYtTrack(next);
+  }
+  function ytNext(){
+    if(!ytPlaylist.length) return;
+    var next = ytCurrentIndex >= ytPlaylist.length-1 ? 0 : ytCurrentIndex+1;
+    playYtTrack(next);
+  }
+
+  async function fetchYtTitle(videoId){
+    try{
+      var res = await fetch('https://www.youtube.com/oembed?url='+encodeURIComponent('https://www.youtube.com/watch?v='+videoId)+'&format=json');
+      if(!res.ok) return null;
+      var data = await res.json();
+      return data.title || null;
+    }catch(e){ return null; }
+  }
+
+  var ytPopoverEl = document.getElementById('ytPopover');
+  var ytAddToggleBtnEl = document.getElementById('ytAddToggleBtn');
+  if(ytAddToggleBtnEl){
+    ytAddToggleBtnEl.addEventListener('click', function(e){
+      e.stopPropagation();
+      var open = ytPopoverEl.classList.toggle('open');
+      ytAddToggleBtnEl.classList.toggle('active', open);
+      if(open){ var inp = document.getElementById('ytUrlInput'); if(inp) setTimeout(function(){ inp.focus(); }, 50); }
+    });
+  }
+  document.addEventListener('click', function(e){
+    if(!ytPopoverEl || !ytPopoverEl.classList.contains('open')) return;
+    if(e.target.closest('#musicBarWrap')) return;
+    ytPopoverEl.classList.remove('open');
+    if(ytAddToggleBtnEl) ytAddToggleBtnEl.classList.remove('active');
+  });
+
+  var ytAddBtnEl = document.getElementById('ytAddBtn');
+  function addYtFromInput(){
+    var input = document.getElementById('ytUrlInput');
+    var url = input.value.trim();
+    if(!url) return;
+    var vid = parseYoutubeId(url);
+    if(!vid){ showToast('유튜브 링크를 확인해주세요'); return; }
+    var track = {id:uid('yt'), videoId:vid, title:vid};
+    ytPlaylist.push(track);
+    saveYtPlaylist();
+    renderYtPlaylist();
+    input.value = '';
+    var shouldAutoplay = ytCurrentIndex === -1;
+    if(shouldAutoplay) playYtTrack(ytPlaylist.length-1);
+    showToast('재생목록에 추가했어요');
+    fetchYtTitle(vid).then(function(title){
+      if(title){ track.title = title; saveYtPlaylist(); renderYtPlaylist(); }
+    });
+  }
+  if(ytAddBtnEl){ ytAddBtnEl.addEventListener('click', addYtFromInput); }
+  var ytUrlInputEl = document.getElementById('ytUrlInput');
+  if(ytUrlInputEl){
+    ytUrlInputEl.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); addYtFromInput(); }
+    });
+  }
+  var ytPrevBtnEl = document.getElementById('ytPrevBtn');
+  if(ytPrevBtnEl){ ytPrevBtnEl.addEventListener('click', ytPrev); }
+  var ytNextBtnEl = document.getElementById('ytNextBtn');
+  if(ytNextBtnEl){ ytNextBtnEl.addEventListener('click', ytNext); }
+  var ytPlayPauseBtnEl = document.getElementById('ytPlayPauseBtn');
+  if(ytPlayPauseBtnEl){
+    ytPlayPauseBtnEl.addEventListener('click', function(){
+      if(!ytPlaylist.length) return;
+      if(ytCurrentIndex === -1){ playYtTrack(0); return; }
+      if(!ytPlayer) return;
+      var state = ytPlayer.getPlayerState && ytPlayer.getPlayerState();
+      if(state === 1){ ytPlayer.pauseVideo(); } else { ytPlayer.playVideo(); }
+      setTimeout(updateMusicBarUI, 150);
+    });
+  }
+  var ytRepeatBtnEl = document.getElementById('ytRepeatBtn');
+  if(ytRepeatBtnEl){
+    ytRepeatBtnEl.addEventListener('click', function(){
+      ytRepeat = !ytRepeat;
+      ytRepeatBtnEl.classList.toggle('active', ytRepeat);
+      ytRepeatBtnEl.title = ytRepeat ? '반복 끄기' : '한 곡 반복';
+      showToast(ytRepeat ? '한 곡 반복 켜짐' : '한 곡 반복 꺼짐');
+    });
+  }
+  // poll briefly to keep the play/pause icon in sync with actual player state
+  setInterval(function(){ if(ytPlayer) updateMusicBarUI(); }, 1000);
+
   /* ================= BACKUP / RESTORE ================= */
   document.getElementById('backupDownloadBtn').addEventListener('click', function(){
     var backup = {
@@ -1737,7 +2448,10 @@
       postings: postings,
       applications: applications,
       reviewQueue: reviewQueue,
-      chatMessages: chatMessages
+      chatMessages: chatMessages,
+      todos: todos,
+      ytPlaylist: ytPlaylist,
+      themeSettings: themeSettings
     };
     var blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
     var url = URL.createObjectURL(blob);
@@ -1769,14 +2483,21 @@
         applications = Array.isArray(backup.applications) ? backup.applications : applications;
         reviewQueue = Array.isArray(backup.reviewQueue) ? backup.reviewQueue : reviewQueue;
         chatMessages = Array.isArray(backup.chatMessages) ? backup.chatMessages : chatMessages;
+        todos = Array.isArray(backup.todos) ? backup.todos : todos;
+        ytPlaylist = Array.isArray(backup.ytPlaylist) ? backup.ytPlaylist : ytPlaylist;
+        themeSettings = backup.themeSettings || themeSettings;
         hospitals.forEach(function(h, idx){ if(!h.color){ h.color = nextPaletteColor(idx); } });
         await saveHospitals();
         await savePostings();
         await saveApplications();
         await saveReviewQueue();
         await setData('chat-messages', chatMessages);
+        await saveTodos();
+        await saveYtPlaylist();
+        await saveTheme();
+        applyTheme();
         renderStats(); renderCalendar(); renderAppFilters(); renderApplications();
-        renderHospitals(); renderChat(); renderReviewQueue();
+        renderHospitals(); renderChat(); renderReviewQueue(); renderTodos(); renderYtPlaylist(); renderThemeView();
         resultEl.style.color = 'var(--green)';
         resultEl.textContent = '복원 완료했어요.';
         showToast('데이터를 복원했어요');
@@ -1806,7 +2527,11 @@
     applications = await getData('applications-data', []);
     chatMessages = await getData('chat-messages', []);
     reviewQueue = await getData('review-queue', []);
+    todos = await getData('todos-data', []);
+    ytPlaylist = await getData('yt-playlist-data', []);
+    themeSettings = await getData('theme-settings', null);
 
+    applyTheme();
     renderStats();
     renderCalendar();
     renderAppFilters();
@@ -1814,6 +2539,10 @@
     renderHospitals();
     renderChat();
     renderReviewQueue();
+    renderTodos();
+    renderYtPlaylist();
+    renderThemeView();
+    initYtPlayer();
   }
 
   init();
