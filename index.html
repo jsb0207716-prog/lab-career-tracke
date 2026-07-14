@@ -193,6 +193,10 @@
   .app-body[open] summary:before{content:"▾ ";}
   .app-textarea-wrap{margin-top:10px;}
   .save-hint{font-size:11px;color:var(--ink-faint);margin-top:6px;}
+  .field-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+  .field-label-row label{margin-bottom:0;}
+  .expand-btn{font-size:11px;font-weight:600;color:var(--teal-deep);background:transparent;border:none;cursor:pointer;padding:2px 4px;}
+  .expand-btn:hover{text-decoration:underline;}
 
   /* ---------- Hospitals ---------- */
   .hosp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -255,6 +259,7 @@
     background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;
     padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25);
   }
+  .modal.modal-wide{max-width:720px;}
   .modal h3{margin:0 0 14px;font-size:17px;font-family:var(--font-mono);color:var(--teal-deep);}
   .modal-close-row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
 
@@ -270,6 +275,18 @@
   a.plainlink{color:var(--teal-deep);text-decoration:none;font-weight:600;}
   a.plainlink:hover{text-decoration:underline;}
 
+  /* ---------- Big text editor modal ---------- */
+  .bigtext-tabs{display:flex;gap:6px;margin-bottom:10px;}
+  .bigtext-tab{font-size:12.5px;font-weight:600;color:var(--ink-soft);background:var(--surface-soft);border:none;padding:6px 12px;border-radius:16px;cursor:pointer;}
+  .bigtext-tab.active{background:var(--teal-deep);color:#fff;}
+  .bigtext-area{min-height:56vh;font-size:14.5px;line-height:1.65;}
+  .bigtext-preview{
+    min-height:56vh;max-height:56vh;overflow-y:auto;border:1px solid var(--line);border-radius:7px;
+    padding:12px 14px;font-size:14.5px;line-height:1.75;background:#fdfaf9;white-space:pre-wrap;
+  }
+  .bigtext-preview strong{color:var(--teal-deep);}
+  .bigtext-hidden{display:none;}
+
   /* ---------- Chat ---------- */
   .chat-context-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;}
   .chat-context-row .field{flex:1;min-width:200px;margin-bottom:0;}
@@ -280,6 +297,7 @@
   .chat-bubble{max-width:78%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6;white-space:pre-wrap;}
   .chat-bubble.user{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:4px;}
   .chat-bubble.assistant{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:4px;}
+  .chat-bubble.assistant strong{color:var(--teal-deep);}
   .chat-bubble.pending{align-self:flex-start;background:#fff;border:1px solid var(--line);color:var(--ink-faint);font-style:italic;}
   .chat-input-row{display:flex;gap:8px;margin-top:12px;align-items:flex-end;}
   .chat-input-row textarea{flex:1;min-height:56px;max-height:140px;}
@@ -597,8 +615,9 @@
   }
 
   /* ---------------- modal ---------------- */
-  function openModal(html){
+  function openModal(html, wide){
     document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalBody').className = wide ? 'modal modal-wide' : 'modal';
     document.getElementById('modalBackdrop').classList.add('open');
   }
   function closeModal(){
@@ -624,11 +643,61 @@
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
+  /* very small markdown renderer: **bold**, *italic*, line breaks.
+     Escapes HTML first so nothing unsafe ever gets injected. */
+  function renderMarkdown(s){
+    var escaped = escapeHtml(s||'');
+    escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    escaped = escaped.replace(/(^|[^*])\*(?!\*)([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
+    escaped = escaped.replace(/\n/g, '<br>');
+    return escaped;
+  }
   function daysUntil(dateStr){
     if(!dateStr) return null;
     var target = new Date(dateStr+'T00:00:00');
     var now = new Date(); now.setHours(0,0,0,0);
     return Math.round((target - now) / 86400000);
+  }
+
+  /* ---------------- big text editor (크게 보기) ----------------
+     Opens a large modal for comfortable editing of long text (자소서, 면접 복기 등),
+     with a toggle to preview **bold**/*italic* markdown rendering. onSave(newValue) is called on save. */
+  function openBigTextEditor(title, initialValue, onSave){
+    openModal(
+      '<h3>'+escapeHtml(title)+'</h3>'
+      + '<div class="bigtext-tabs">'
+      + '<button class="bigtext-tab active" id="bigtextTabEdit">✏️ 편집</button>'
+      + '<button class="bigtext-tab" id="bigtextTabPreview">👁 미리보기</button>'
+      + '</div>'
+      + '<textarea id="bigtextArea" class="bigtext-area">'+escapeHtml(initialValue||'')+'</textarea>'
+      + '<div id="bigtextPreview" class="bigtext-preview bigtext-hidden"></div>'
+      + '<div class="save-hint" style="margin-top:8px;">**굵게** 처럼 쓰면 미리보기 탭에서 굵게 표시돼요. 저장을 눌러야 반영돼요.</div>'
+      + '<div class="modal-close-row"><button class="btn" id="modalCancel">취소</button><button class="btn btn-primary" id="modalSave">저장</button></div>',
+      true
+    );
+    var area = document.getElementById('bigtextArea');
+    var preview = document.getElementById('bigtextPreview');
+    var tabEdit = document.getElementById('bigtextTabEdit');
+    var tabPreview = document.getElementById('bigtextTabPreview');
+
+    tabPreview.addEventListener('click', function(){
+      preview.innerHTML = renderMarkdown(area.value) || '<span style="color:var(--ink-faint);">내용이 없어요.</span>';
+      area.classList.add('bigtext-hidden');
+      preview.classList.remove('bigtext-hidden');
+      tabPreview.classList.add('active');
+      tabEdit.classList.remove('active');
+    });
+    tabEdit.addEventListener('click', function(){
+      preview.classList.add('bigtext-hidden');
+      area.classList.remove('bigtext-hidden');
+      tabEdit.classList.add('active');
+      tabPreview.classList.remove('active');
+    });
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalSave').addEventListener('click', function(){
+      onSave(area.value);
+      closeModal();
+    });
   }
 
   /* ================= TABS ================= */
@@ -972,8 +1041,14 @@
         + '<details class="app-body"><summary>메모 · 자기소개서 · 면접 복기 보기/편집</summary>'
         + '<div class="app-textarea-wrap">'
         + '<div class="field"><label>메모</label><input type="text" class="app-memo-input" data-id="'+a.id+'" value="'+escapeHtml(a.memo||'')+'" placeholder="예: 필기시험 8/10, 담당자 연락처 등"></div>'
-        + '<div class="field"><label>자기소개서</label><textarea class="app-cover-input" data-id="'+a.id+'" placeholder="이 지원에 사용한 자기소개서를 저장해두세요">'+escapeHtml(a.coverLetter||'')+'</textarea></div>'
-        + '<div class="field"><label>면접 복기</label><textarea class="app-interview-input" data-id="'+a.id+'" placeholder="받았던 질문, 답변, 분위기, 아쉬웠던 점 등을 자유롭게 적어두세요">'+escapeHtml(a.interviewNotes||'')+'</textarea></div>'
+        + '<div class="field">'
+        + '<div class="field-label-row"><label>자기소개서</label><button type="button" class="expand-btn" data-expand-app="'+a.id+'" data-expand-field="coverLetter">⤢ 크게 보기</button></div>'
+        + '<textarea class="app-cover-input" data-id="'+a.id+'" placeholder="이 지원에 사용한 자기소개서를 저장해두세요">'+escapeHtml(a.coverLetter||'')+'</textarea>'
+        + '</div>'
+        + '<div class="field">'
+        + '<div class="field-label-row"><label>면접 복기</label><button type="button" class="expand-btn" data-expand-app="'+a.id+'" data-expand-field="interviewNotes">⤢ 크게 보기</button></div>'
+        + '<textarea class="app-interview-input" data-id="'+a.id+'" placeholder="받았던 질문, 답변, 분위기, 아쉬웠던 점 등을 자유롭게 적어두세요">'+escapeHtml(a.interviewNotes||'')+'</textarea>'
+        + '</div>'
         + '<button class="btn btn-primary btn-sm app-save-btn" data-id="'+a.id+'">저장</button>'
         + '<span class="save-hint">저장을 눌러야 반영돼요. 삭제 전까지 계속 보관됩니다.</span>'
         + '</div></details>'
@@ -1010,6 +1085,24 @@
         saveApplications();
         renderApplications();
         renderStats();
+      });
+    });
+    document.querySelectorAll('[data-expand-app]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.expandApp;
+        var field = btn.dataset.expandField;
+        var a = applications.find(function(x){ return x.id===id; });
+        if(!a) return;
+        var selector = field === 'coverLetter' ? '.app-cover-input[data-id="'+id+'"]' : '.app-interview-input[data-id="'+id+'"]';
+        var liveInput = document.querySelector(selector);
+        var titleText = field === 'coverLetter' ? '자기소개서 · '+a.hospitalName : '면접 복기 · '+a.hospitalName;
+        openBigTextEditor(titleText, liveInput ? liveInput.value : (a[field]||''), function(newVal){
+          if(liveInput) liveInput.value = newVal;
+          a[field] = newVal;
+          a.updatedAt = new Date().toISOString();
+          saveApplications();
+          showToast('저장했어요');
+        });
       });
     });
   }
@@ -1076,6 +1169,7 @@
         + '</div>'
         + '<details class="app-body" style="margin-top:8px;"><summary>'+(h.coverLetter ? '📄 자소서 등록됨' : '자소서 등록하기')+'</summary>'
         + '<div class="app-textarea-wrap">'
+        + '<div class="field-label-row" style="margin-bottom:6px;"><span></span><button type="button" class="expand-btn" data-expand-hosp="'+h.id+'">⤢ 크게 보기</button></div>'
         + '<textarea class="hosp-cover-input" data-id="'+h.id+'" placeholder="이 병원에 지원할 때 쓸 기본 자기소개서를 저장해두세요">'+escapeHtml(h.coverLetter||'')+'</textarea>'
         + '<button class="btn btn-primary btn-sm hosp-cover-save" data-id="'+h.id+'" style="margin-top:8px;">저장</button>'
         + '<span class="save-hint">저장을 눌러야 반영돼요.</span>'
@@ -1107,6 +1201,21 @@
         saveHospitals();
         renderHospitals();
         showToast('자소서를 저장했어요');
+      });
+    });
+    document.querySelectorAll('[data-expand-hosp]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.expandHosp;
+        var h = hospitalById(id);
+        if(!h) return;
+        var liveInput = document.querySelector('.hosp-cover-input[data-id="'+id+'"]');
+        openBigTextEditor('자기소개서 · '+h.name, liveInput ? liveInput.value : (h.coverLetter||''), function(newVal){
+          if(liveInput) liveInput.value = newVal;
+          h.coverLetter = newVal;
+          saveHospitals();
+          renderHospitals();
+          showToast('저장했어요');
+        });
       });
     });
   }
@@ -1431,7 +1540,9 @@
       return;
     }
     win.innerHTML = chatMessages.map(function(m){
-      return '<div class="chat-bubble '+(m.role==='user'?'user':'assistant')+'">'+escapeHtml(m.content)+'</div>';
+      var isUser = m.role==='user';
+      var body = isUser ? escapeHtml(m.content) : renderMarkdown(m.content);
+      return '<div class="chat-bubble '+(isUser?'user':'assistant')+'">'+body+'</div>';
     }).join('');
     win.scrollTop = win.scrollHeight;
   }
