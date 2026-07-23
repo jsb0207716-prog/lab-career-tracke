@@ -83,7 +83,7 @@
   .tab-btn:hover{background:var(--surface-soft);}
   .tab-btn.active{background:var(--teal);color:#fff;}
 
-  .subtabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:10px;}
+  .subtabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:10px;}
   .subtab-btn{
     font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--ink-soft);
     background:var(--surface-soft);border:none;padding:7px 13px;border-radius:20px;cursor:pointer;
@@ -369,6 +369,29 @@
   .todo-add-row button{flex-shrink:0;}
   .todo-empty{font-size:11.5px;color:var(--ink-faint);padding:8px 2px;}
 
+  /* ---------- Info clip (sidebar box + edit modal) ---------- */
+  .info-clip-desc{font-size:11.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;}
+  .info-clip-status{font-size:11px;color:var(--ink-faint);margin-top:8px;line-height:1.5;}
+  .info-clip-status.err{color:var(--red);}
+  .info-clip-cat{border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+  .info-clip-cat-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:var(--surface-soft);}
+  .info-clip-cat-head h4{margin:0;font-size:13px;font-family:var(--font-mono);color:var(--teal-deep);}
+  .info-clip-del-cat{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:11.5px;text-decoration:underline;padding:2px 4px;}
+  .info-clip-del-cat:hover{color:var(--red);}
+  .info-clip-field-row{display:grid;grid-template-columns:118px 1fr;gap:8px;align-items:start;padding:10px 14px;border-top:1px solid var(--line);}
+  .info-clip-field-row label{padding-top:9px;margin-bottom:0;}
+  .info-clip-field-row textarea{min-height:38px;font-size:13px;}
+  .info-clip-field-actions{grid-column:1 / -1;display:flex;justify-content:flex-end;gap:10px;margin-top:2px;}
+  .info-clip-field-actions button{background:none;border:none;color:var(--ink-faint);font-size:11px;cursor:pointer;}
+  .info-clip-field-actions button:hover{color:var(--red);}
+  .info-clip-add-field{
+    margin:10px 14px 14px;background:none;border:1px dashed var(--line);border-radius:8px;padding:8px 12px;
+    font-size:12px;color:var(--ink-soft);cursor:pointer;width:calc(100% - 28px);text-align:left;
+  }
+  .info-clip-add-field:hover{border-color:var(--teal);color:var(--teal-deep);}
+  .info-clip-add-cat-row{display:flex;gap:8px;margin-top:16px;}
+  .info-clip-add-cat-row input{flex:1;}
+
   /* ---------- Theme customization ---------- */
   .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   @media(max-width:760px){ .theme-grid{grid-template-columns:1fr;} }
@@ -522,6 +545,16 @@
             <input type="text" id="todoInput" placeholder="할 일 추가 후 Enter">
             <button class="btn btn-primary btn-sm" id="todoAddBtn">추가</button>
           </div>
+        </div>
+
+        <div class="cal-aside" id="infoClipSection">
+          <div class="todo-header-row">
+            <div class="todo-header">📎 지원정보클립</div>
+            <button class="btn btn-ghost btn-sm" id="infoClipEditBtn">편집</button>
+          </div>
+          <div class="info-clip-desc">이력서·자소서에 반복해서 쓰는 정보를 저장해두고, 고정 팝업으로 꺼내서 바로바로 복사할 수 있어요.</div>
+          <button class="btn btn-primary btn-sm" id="infoClipPinBtn" style="width:100%;">📌 고정 팝업 열기</button>
+          <div class="info-clip-status" id="infoClipStatus"></div>
         </div>
       </aside>
     </div>
@@ -2092,6 +2125,7 @@
     } else {
       document.body.style.backgroundImage = 'none';
     }
+    syncInfoClipPopupTheme();
   }
 
   function renderThemeSwatches(){
@@ -2232,6 +2266,322 @@
       renderThemeView();
       showToast('기본 테마로 되돌렸어요');
     });
+  }
+
+  /* ================= INFO CLIP (지원정보클립) ================= */
+  var DEFAULT_INFO_CLIP_DATA = [
+    { id:'ic_personal', name:'인적사항', fields:[
+      {id:'if01', label:'이름(한글)', value:''},
+      {id:'if02', label:'이름(한자)', value:''},
+      {id:'if03', label:'이름(영문)', value:''},
+      {id:'if04', label:'생년월일', value:''},
+      {id:'if05', label:'주소', value:''}
+    ]},
+    { id:'ic_edu', name:'학력사항', fields:[
+      {id:'if06', label:'고등학교 입학~졸업', value:''},
+      {id:'if07', label:'대학교(학사) 입학~졸업', value:''},
+      {id:'if08', label:'전공', value:''},
+      {id:'if09', label:'석차', value:''},
+      {id:'if10', label:'성적(평점)', value:''},
+      {id:'if11', label:'학위번호', value:''}
+    ]},
+    { id:'ic_career', name:'경력사항', fields:[
+      {id:'if12', label:'근무형태', value:''},
+      {id:'if13', label:'근무기간', value:''},
+      {id:'if14', label:'주요업무', value:''},
+      {id:'if15', label:'경력기술서', value:''}
+    ]},
+    { id:'ic_license', name:'면허증', fields:[
+      {id:'if16', label:'발급기관', value:''},
+      {id:'if17', label:'면허번호', value:''},
+      {id:'if18', label:'발급날짜', value:''}
+    ]},
+    { id:'ic_award', name:'상장', fields:[
+      {id:'if19', label:'상장명', value:''},
+      {id:'if20', label:'상장날짜', value:''},
+      {id:'if21', label:'내용', value:''}
+    ]},
+    { id:'ic_natexam', name:'국가고시성적', fields:[
+      {id:'if22', label:'국가고시 성적', value:''}
+    ]},
+    { id:'ic_semester', name:'학년·학기별 성적', fields:[
+      {id:'if23', label:'1학년 1학기', value:''},
+      {id:'if24', label:'1학년 2학기', value:''},
+      {id:'if25', label:'2학년 1학기', value:''},
+      {id:'if26', label:'2학년 2학기', value:''}
+    ]},
+    { id:'ic_homepage', name:'채용 홈페이지', fields:[
+      {id:'if27', label:'홈페이지 링크', value:''}
+    ]}
+  ];
+
+  var infoClipData = [];
+  var infoClipPipWindow = null;
+  var infoClipSaveTimer = null;
+
+  async function saveInfoClip(){
+    await setData('info-clip-data', infoClipData);
+    syncInfoClipPopupTheme();
+  }
+  function scheduleInfoClipSave(){
+    clearTimeout(infoClipSaveTimer);
+    infoClipSaveTimer = setTimeout(saveInfoClip, 450);
+  }
+  function infoClipUid(prefix){ return uid(prefix); }
+
+  /* ---- edit modal (categories + fields), styled like other wide modals ---- */
+  function renderInfoClipModalBody(){
+    var html = '<h3>📎 지원정보클립 편집</h3>'
+      + '<div class="save-hint" style="margin-bottom:12px;">여기 저장한 내용은 사이드바의 "고정 팝업 열기"로 언제든 꺼내서 복사할 수 있어요. 입력하는 대로 자동 저장돼요.</div>'
+      + '<div id="infoClipCatWrap">' + infoClipData.map(renderInfoClipCatHtml).join('') + '</div>'
+      + '<div class="info-clip-add-cat-row">'
+      + '<input type="text" id="infoClipNewCatName" placeholder="새 항목 그룹 이름 (예: 자소서 공통문구)">'
+      + '<button class="btn" id="infoClipAddCatBtn">그룹 추가</button>'
+      + '</div>'
+      + '<div class="modal-close-row"><button class="btn btn-primary" id="modalCloseBtn">완료</button></div>';
+    return html;
+  }
+  function renderInfoClipCatHtml(cat){
+    return '<div class="info-clip-cat" data-cat="'+cat.id+'">'
+      + '<div class="info-clip-cat-head"><h4>'+escapeHtml(cat.name)+'</h4>'
+      + '<button type="button" class="info-clip-del-cat" data-del-cat="'+cat.id+'">그룹 삭제</button></div>'
+      + cat.fields.map(function(f){ return renderInfoClipFieldHtml(cat.id, f); }).join('')
+      + '<button type="button" class="info-clip-add-field" data-add-field="'+cat.id+'">+ 항목 추가</button>'
+      + '</div>';
+  }
+  function renderInfoClipFieldHtml(catId, f){
+    return '<div class="info-clip-field-row">'
+      + '<label>'+escapeHtml(f.label)+'</label>'
+      + '<textarea rows="1" data-cat="'+catId+'" data-field="'+f.id+'">'+escapeHtml(f.value)+'</textarea>'
+      + '<div class="info-clip-field-actions">'
+      + '<button type="button" data-rename-field data-cat="'+catId+'" data-field="'+f.id+'">이름 바꾸기</button>'
+      + '<button type="button" data-del-field data-cat="'+catId+'" data-field="'+f.id+'">이 항목 삭제</button>'
+      + '</div></div>';
+  }
+  function infoClipAutoGrow(root){
+    root.querySelectorAll('textarea').forEach(function(t){
+      t.style.height = 'auto';
+      t.style.height = t.scrollHeight + 'px';
+    });
+  }
+  function bindInfoClipModalEvents(){
+    var wrap = document.getElementById('modalBody');
+
+    wrap.querySelectorAll('textarea[data-cat]').forEach(function(t){
+      t.addEventListener('input', function(){
+        var cat = infoClipData.find(function(c){ return c.id===t.dataset.cat; });
+        var field = cat && cat.fields.find(function(f){ return f.id===t.dataset.field; });
+        if(field){ field.value = t.value; }
+        t.style.height = 'auto';
+        t.style.height = t.scrollHeight + 'px';
+        scheduleInfoClipSave();
+      });
+    });
+
+    wrap.querySelectorAll('[data-add-field]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var cat = infoClipData.find(function(c){ return c.id===btn.dataset.addField; });
+        if(!cat) return;
+        var label = prompt('추가할 항목의 이름을 입력해주세요 (예: 자격증명)');
+        if(label === null) return;
+        label = label.trim();
+        if(!label) return;
+        cat.fields.push({id: infoClipUid('if'), label: label, value:''});
+        saveInfoClip();
+        refreshInfoClipModal();
+      });
+    });
+
+    wrap.querySelectorAll('[data-rename-field]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var cat = infoClipData.find(function(c){ return c.id===btn.dataset.cat; });
+        var field = cat && cat.fields.find(function(f){ return f.id===btn.dataset.field; });
+        if(!field) return;
+        var label = prompt('항목 이름을 바꿔주세요', field.label);
+        if(label === null) return;
+        label = label.trim();
+        if(!label) return;
+        field.label = label;
+        saveInfoClip();
+        refreshInfoClipModal();
+      });
+    });
+
+    wrap.querySelectorAll('[data-del-field]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var cat = infoClipData.find(function(c){ return c.id===btn.dataset.cat; });
+        if(!cat) return;
+        cat.fields = cat.fields.filter(function(f){ return f.id !== btn.dataset.field; });
+        saveInfoClip();
+        refreshInfoClipModal();
+      });
+    });
+
+    wrap.querySelectorAll('[data-del-cat]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(!confirm('이 그룹 전체를 삭제할까요?')) return;
+        infoClipData = infoClipData.filter(function(c){ return c.id !== btn.dataset.delCat; });
+        saveInfoClip();
+        refreshInfoClipModal();
+      });
+    });
+
+    var addCatBtn = document.getElementById('infoClipAddCatBtn');
+    if(addCatBtn){
+      addCatBtn.addEventListener('click', function(){
+        var input = document.getElementById('infoClipNewCatName');
+        var name = input.value.trim();
+        if(!name) return;
+        infoClipData.push({id: infoClipUid('ic'), name: name, fields:[{id: infoClipUid('if'), label:'항목명', value:''}]});
+        input.value = '';
+        saveInfoClip();
+        refreshInfoClipModal();
+      });
+    }
+
+    var closeBtn = document.getElementById('modalCloseBtn');
+    if(closeBtn){ closeBtn.addEventListener('click', closeModal); }
+
+    infoClipAutoGrow(wrap);
+  }
+  function refreshInfoClipModal(){
+    document.getElementById('modalBody').innerHTML = renderInfoClipModalBody();
+    bindInfoClipModalEvents();
+  }
+  function openInfoClipEditModal(){
+    openModal(renderInfoClipModalBody(), true);
+    bindInfoClipModalEvents();
+  }
+  var infoClipEditBtnEl = document.getElementById('infoClipEditBtn');
+  if(infoClipEditBtnEl){ infoClipEditBtnEl.addEventListener('click', openInfoClipEditModal); }
+
+  /* ---- pinned popup (Document Picture-in-Picture), theme-synced ---- */
+  function currentThemeVars(){
+    var cs = getComputedStyle(document.documentElement);
+    return {
+      accent: (cs.getPropertyValue('--teal')||'#E28A82').trim(),
+      accentDeep: (cs.getPropertyValue('--teal-deep')||'#BF5449').trim(),
+      accentSoft: (cs.getPropertyValue('--teal-soft')||'#FBE2DF').trim(),
+      bg: (cs.getPropertyValue('--bg')||'#FDF2F0').trim(),
+      surfaceSoft: (cs.getPropertyValue('--surface-soft')||'#FBE2DF').trim(),
+      line: (cs.getPropertyValue('--line')||'#F5DCD7').trim(),
+      ink: (cs.getPropertyValue('--ink')||'#3A2622').trim(),
+      inkSoft: (cs.getPropertyValue('--ink-soft')||'#9B7770').trim()
+    };
+  }
+  function isLikelyUrl(v){ return /^https?:\/\//i.test((v||'').trim()); }
+  function buildInfoClipPopupHtml(){
+    var t = currentThemeVars();
+    var style = ''
+      + 'body{margin:0;font-family:Pretendard,-apple-system,sans-serif;background:'+t.bg+';color:'+t.ink+';}'
+      + '.pop-wrap{padding:12px;}'
+      + '.pop-title{font-size:12.5px;font-weight:700;color:'+t.accentDeep+';margin:0 0 10px;font-family:monospace;}'
+      + '.pop-cat{margin-bottom:12px;}'
+      + '.pop-cat h3{font-size:11.5px;margin:0 0 6px;color:'+t.inkSoft+';text-transform:uppercase;letter-spacing:.03em;}'
+      + '.pop-item{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid '+t.line+';border-radius:8px;padding:7px 9px;margin-bottom:6px;}'
+      + '.pop-item .lbl{font-size:11px;color:'+t.inkSoft+';flex:0 0 72px;}'
+      + '.pop-item .val{flex:1;font-size:12.5px;white-space:pre-wrap;word-break:break-word;max-height:60px;overflow:auto;}'
+      + '.pop-item button{flex:0 0 auto;background:'+t.accentDeep+';color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer;}'
+      + '.pop-item button.copied{background:#2E7048;}'
+      + '.pop-item a.open-link{flex:0 0 auto;font-size:11px;color:'+t.accentDeep+';text-decoration:none;font-weight:700;}'
+      + '.pop-empty{font-size:12px;color:'+t.inkSoft+';padding:20px 0;text-align:center;}';
+
+    var body = '<div class="pop-wrap"><div class="pop-title">📎 지원정보클립</div>';
+    var hasAny = infoClipData.some(function(c){ return c.fields.some(function(f){ return !!f.value; }); });
+    if(!hasAny){
+      body += '<div class="pop-empty">저장된 정보가 없어요. 사이드바의 "편집"에서 채워보세요.</div>';
+    } else {
+      infoClipData.forEach(function(cat){
+        var filled = cat.fields.filter(function(f){ return !!f.value; });
+        if(!filled.length) return;
+        body += '<div class="pop-cat"><h3>'+escapeHtml(cat.name)+'</h3>';
+        filled.forEach(function(f){
+          var safeVal = escapeHtml(f.value).replace(/"/g,'&quot;');
+          if(isLikelyUrl(f.value)){
+            body += '<div class="pop-item">'
+              + '<span class="lbl">'+escapeHtml(f.label)+'</span>'
+              + '<span class="val">'+escapeHtml(f.value)+'</span>'
+              + '<a class="open-link" target="_blank" rel="noopener" href="'+escapeHtml(f.value)+'">열기 ↗</a>'
+              + '<button data-copy="'+safeVal+'">복사</button>'
+              + '</div>';
+          } else {
+            body += '<div class="pop-item">'
+              + '<span class="lbl">'+escapeHtml(f.label)+'</span>'
+              + '<span class="val">'+escapeHtml(f.value)+'</span>'
+              + '<button data-copy="'+safeVal+'">복사</button>'
+              + '</div>';
+          }
+        });
+        body += '</div>';
+      });
+    }
+    body += '</div>';
+    return '<style>'+style+'</style>'+body;
+  }
+  function attachInfoClipCopyHandlers(doc){
+    doc.querySelectorAll('[data-copy]').forEach(function(btn){
+      btn.addEventListener('click', async function(){
+        try{
+          await navigator.clipboard.writeText(btn.dataset.copy);
+        }catch(e){
+          var ta = doc.createElement('textarea');
+          ta.value = btn.dataset.copy;
+          doc.body.appendChild(ta);
+          ta.select();
+          try{ doc.execCommand('copy'); }catch(e2){}
+          doc.body.removeChild(ta);
+        }
+        var original = btn.textContent;
+        btn.textContent = '복사됨';
+        btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent = original; btn.classList.remove('copied'); }, 1200);
+      });
+    });
+  }
+  function syncInfoClipPopupTheme(){
+    if(infoClipPipWindow && !infoClipPipWindow.closed){
+      infoClipPipWindow.document.body.innerHTML = buildInfoClipPopupHtml();
+      attachInfoClipCopyHandlers(infoClipPipWindow.document);
+    }
+  }
+  async function openInfoClipPinnedPopup(){
+    var statusEl = document.getElementById('infoClipStatus');
+    if(!('documentPictureInPicture' in window)){
+      if(statusEl){
+        statusEl.textContent = '이 브라우저는 고정 팝업(Document Picture-in-Picture)을 지원하지 않아요. 최신 크롬이나 엣지 데스크톱에서 열어주세요.';
+        statusEl.classList.add('err');
+      }
+      showToast('이 브라우저는 고정 팝업을 지원하지 않아요');
+      return;
+    }
+    try{
+      if(infoClipPipWindow && !infoClipPipWindow.closed){
+        infoClipPipWindow.focus();
+        return;
+      }
+      infoClipPipWindow = await window.documentPictureInPicture.requestWindow({ width: 340, height: 480 });
+      infoClipPipWindow.document.title = '지원 정보 클립';
+      infoClipPipWindow.document.body.style.margin = '0';
+      infoClipPipWindow.document.body.innerHTML = buildInfoClipPopupHtml();
+      attachInfoClipCopyHandlers(infoClipPipWindow.document);
+      infoClipPipWindow.addEventListener('pagehide', function(){ infoClipPipWindow = null; });
+      if(statusEl){ statusEl.textContent = ''; statusEl.classList.remove('err'); }
+    }catch(e){
+      if(statusEl){
+        statusEl.textContent = '팝업을 여는 중 문제가 생겼어요: ' + (e && e.message ? e.message : e);
+        statusEl.classList.add('err');
+      }
+      showToast('팝업을 여는 데 실패했어요');
+    }
+  }
+  var infoClipPinBtnEl = document.getElementById('infoClipPinBtn');
+  if(infoClipPinBtnEl){ infoClipPinBtnEl.addEventListener('click', openInfoClipPinnedPopup); }
+  if(!('documentPictureInPicture' in window)){
+    var infoClipStatusInit = document.getElementById('infoClipStatus');
+    if(infoClipStatusInit){
+      infoClipStatusInit.textContent = '참고: 이 브라우저는 고정 팝업 기능을 지원하지 않아요. 최신 크롬/엣지 데스크톱을 사용해주세요.';
+      infoClipStatusInit.classList.add('err');
+    }
   }
 
   /* ================= YOUTUBE PLAYLIST (compact bar) ================= */
@@ -2451,7 +2801,8 @@
       chatMessages: chatMessages,
       todos: todos,
       ytPlaylist: ytPlaylist,
-      themeSettings: themeSettings
+      themeSettings: themeSettings,
+      infoClipData: infoClipData
     };
     var blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
     var url = URL.createObjectURL(blob);
@@ -2486,6 +2837,7 @@
         todos = Array.isArray(backup.todos) ? backup.todos : todos;
         ytPlaylist = Array.isArray(backup.ytPlaylist) ? backup.ytPlaylist : ytPlaylist;
         themeSettings = backup.themeSettings || themeSettings;
+        infoClipData = Array.isArray(backup.infoClipData) ? backup.infoClipData : infoClipData;
         hospitals.forEach(function(h, idx){ if(!h.color){ h.color = nextPaletteColor(idx); } });
         await saveHospitals();
         await savePostings();
@@ -2495,6 +2847,7 @@
         await saveTodos();
         await saveYtPlaylist();
         await saveTheme();
+        await saveInfoClip();
         applyTheme();
         renderStats(); renderCalendar(); renderAppFilters(); renderApplications();
         renderHospitals(); renderChat(); renderReviewQueue(); renderTodos(); renderYtPlaylist(); renderThemeView();
@@ -2530,6 +2883,11 @@
     todos = await getData('todos-data', []);
     ytPlaylist = await getData('yt-playlist-data', []);
     themeSettings = await getData('theme-settings', null);
+    infoClipData = await getData('info-clip-data', null);
+    if(!infoClipData){
+      infoClipData = JSON.parse(JSON.stringify(DEFAULT_INFO_CLIP_DATA));
+      await saveInfoClip();
+    }
 
     applyTheme();
     renderStats();
