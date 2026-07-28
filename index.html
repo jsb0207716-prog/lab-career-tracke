@@ -556,6 +556,14 @@
           <button class="btn btn-primary btn-sm" id="infoClipPinBtn" style="width:100%;">📌 고정 팝업 열기</button>
           <div class="info-clip-status" id="infoClipStatus"></div>
         </div>
+<div class="cal-aside" id="charCountSection">
+  <div class="todo-header-row">
+    <div class="todo-header">✍️ 글자수 세기</div>
+  </div>
+  <div class="info-clip-desc"></div>
+  <button class="btn btn-primary btn-sm" id="charCountPinBtn" style="width:100%;">📌 고정 팝업 열기</button>
+  <div class="info-clip-status" id="charCountStatus"></div>
+</div>
       </aside>
     </div>
   </div>
@@ -2576,6 +2584,97 @@
   }
   var infoClipPinBtnEl = document.getElementById('infoClipPinBtn');
   if(infoClipPinBtnEl){ infoClipPinBtnEl.addEventListener('click', openInfoClipPinnedPopup); }
+/* ================= CHAR COUNT (글자수 세기 고정팝업) ================= */
+var charCountPipWindow = null;
+
+function buildCharCountPopupHtml(){
+  var t = currentThemeVars();
+  var style = ''
+    + 'body{margin:0;font-family:Pretendard,-apple-system,sans-serif;background:'+t.bg+';color:'+t.ink+';}'
+    + '.cc-wrap{padding:12px;display:flex;flex-direction:column;height:100vh;box-sizing:border-box;}'
+    + '.cc-title{font-size:12.5px;font-weight:700;color:'+t.accentDeep+';margin:0 0 8px;font-family:monospace;}'
+    + '.cc-textarea{flex:1;width:100%;box-sizing:border-box;resize:none;border:1px solid '+t.line+';border-radius:8px;'
+    + 'padding:10px;font-size:13.5px;line-height:1.6;font-family:Pretendard,-apple-system,sans-serif;color:'+t.ink+';background:#fff;}'
+    + '.cc-stats{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}'
+    + '.cc-stat{flex:1;min-width:80px;background:#fff;border:1px solid '+t.line+';border-radius:8px;padding:7px 9px;text-align:center;}'
+    + '.cc-stat .num{font-size:16px;font-weight:700;color:'+t.accentDeep+';font-family:monospace;}'
+    + '.cc-stat .lbl{font-size:10.5px;color:'+t.inkSoft+';margin-top:2px;}'
+    + '.cc-clear{margin-top:8px;background:'+t.accentDeep+';color:#fff;border:none;border-radius:6px;padding:7px 10px;font-size:11.5px;cursor:pointer;align-self:flex-end;}';
+
+  var body = '<div class="cc-wrap">'
+    + '<div class="cc-title">✍️ 글자수 세기</div>'
+    + '<textarea class="cc-textarea" id="ccArea" placeholder="여기에 이력서/자소서 내용을 붙여넣으세요"></textarea>'
+    + '<div class="cc-stats">'
+    + '<div class="cc-stat"><div class="num" id="ccWithSpace">0</div><div class="lbl">공백 포함</div></div>'
+    + '<div class="cc-stat"><div class="num" id="ccNoSpace">0</div><div class="lbl">공백 제외</div></div>'
+    + '<div class="cc-stat"><div class="num" id="ccBytes">0</div><div class="lbl">bytes(한글3)</div></div>'
+    + '</div>'
+    + '<button class="cc-clear" id="ccClearBtn">내용 지우기</button>'
+    + '</div>';
+  return '<style>'+style+'</style>'+body;
+}
+
+function attachCharCountHandlers(doc){
+  var area = doc.getElementById('ccArea');
+  var withSpaceEl = doc.getElementById('ccWithSpace');
+  var noSpaceEl = doc.getElementById('ccNoSpace');
+  var bytesEl = doc.getElementById('ccBytes');
+  var clearBtn = doc.getElementById('ccClearBtn');
+
+  function updateCount(){
+    var text = area.value;
+    var withSpace = text.length;
+    var noSpace = text.replace(/\s/g,'').length;
+    var bytes = 0;
+    for(var i=0;i<text.length;i++){
+      var code = text.charCodeAt(i);
+      bytes += (code > 127) ? 3 : 1;
+    }
+    withSpaceEl.textContent = withSpace;
+    noSpaceEl.textContent = noSpace;
+    bytesEl.textContent = bytes;
+  }
+  area.addEventListener('input', updateCount);
+  clearBtn.addEventListener('click', function(){
+    area.value = '';
+    updateCount();
+    area.focus();
+  });
+  updateCount();
+}
+
+async function openCharCountPinnedPopup(){
+  var statusEl = document.getElementById('charCountStatus');
+  if(!('documentPictureInPicture' in window)){
+    if(statusEl){
+      statusEl.textContent = '이 브라우저는 고정 팝업을 지원하지 않아요. 최신 크롬이나 엣지 데스크톱에서 열어주세요.';
+      statusEl.classList.add('err');
+    }
+    showToast('이 브라우저는 고정 팝업을 지원하지 않아요');
+    return;
+  }
+  try{
+    if(charCountPipWindow && !charCountPipWindow.closed){
+      charCountPipWindow.focus();
+      return;
+    }
+    charCountPipWindow = await window.documentPictureInPicture.requestWindow({ width: 320, height: 420 });
+    charCountPipWindow.document.title = '글자수 세기';
+    charCountPipWindow.document.body.style.margin = '0';
+    charCountPipWindow.document.body.innerHTML = buildCharCountPopupHtml();
+    attachCharCountHandlers(charCountPipWindow.document);
+    charCountPipWindow.addEventListener('pagehide', function(){ charCountPipWindow = null; });
+    if(statusEl){ statusEl.textContent = ''; statusEl.classList.remove('err'); }
+  }catch(e){
+    if(statusEl){
+      statusEl.textContent = '팝업을 여는 중 문제가 생겼어요: ' + (e && e.message ? e.message : e);
+      statusEl.classList.add('err');
+    }
+    showToast('팝업을 여는 데 실패했어요');
+  }
+}
+var charCountPinBtnEl = document.getElementById('charCountPinBtn');
+if(charCountPinBtnEl){ charCountPinBtnEl.addEventListener('click', openCharCountPinnedPopup); }
   if(!('documentPictureInPicture' in window)){
     var infoClipStatusInit = document.getElementById('infoClipStatus');
     if(infoClipStatusInit){
