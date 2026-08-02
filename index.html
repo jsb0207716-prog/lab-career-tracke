@@ -1505,9 +1505,9 @@
       if(appFilter === '전체') return a.status !== '불합격';
       return a.status === appFilter;
     });
-    list.sort(function(a,b){
+   list.sort(function(a,b){
       var da = getAppDeadline(a), db = getAppDeadline(b);
-      if(da && db) return da.localeCompare(db);
+      if(da && db) return db.localeCompare(da);
       if(da && !db) return -1;
       if(!da && db) return 1;
       return (b.updatedAt||'').localeCompare(a.updatedAt||'');
