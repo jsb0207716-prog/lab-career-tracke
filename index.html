@@ -1531,9 +1531,9 @@
         + '<div><div class="app-hospital">'+(a.passedScreening?'⭐ ':'')+escapeHtml(a.hospitalName)+'</div>'
         + '<div class="app-meta">'+(a.appliedDate?('지원일 '+a.appliedDate):'날짜 미지정')+(a.postingTitle?(' · '+escapeHtml(a.postingTitle)):'')+(deadline?(' · 마감 '+deadline):'')+'</div></div>'
         + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
-        + '<button class="btn btn-sm" data-toggle-star="'+a.id+'" title="서류합격 여부 표시">'+(a.passedScreening?'★ 서류합격':'☆ 서류합격 표시')+'</button>'
+        + '<button class="btn btn-sm" data-toggle-star="'+a.id+'" title="서류합격 여부 표시">'+(a.passedScreening?'★':'☆')+'</button>'
         + '<select class="app-status-select" data-id="'+a.id+'" style="width:auto;font-family:var(--font-mono);font-size:12px;font-weight:600;color:'+meta.c+';background:'+meta.bg+';border-color:transparent;">'+statusOptions+'</select>'
-        + '<button class="btn btn-sm" data-quick-cover="'+a.id+'">📄 자소서 크게보기</button>'
+        + '<button class="btn btn-sm" data-quick-cover="'+a.id+'">📄</button>'
         + (link?('<a class="btn btn-sm" target="_blank" rel="noopener" href="'+escapeHtml(link)+'">공고 링크 ↗</a>'):'')
         + '<button class="btn btn-danger btn-sm" data-del-app="'+a.id+'">삭제</button>'
         + '</div></div>'
