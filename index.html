@@ -1494,29 +1494,46 @@
     });
   }
 
+  function getAppDeadline(a){
+    var p = a.postingId ? postings.find(function(x){ return x.id === a.postingId; }) : null;
+    return (p && p.deadline) ? p.deadline : '';
+  }
+
   function renderApplications(){
     renderChatContextOptions();
-    var list = applications.filter(function(a){ return appFilter==='전체' || a.status===appFilter; });
-    list.sort(function(a,b){ return (b.updatedAt||'').localeCompare(a.updatedAt||''); });
+    var list = applications.filter(function(a){
+      if(appFilter === '전체') return a.status !== '불합격';
+      return a.status === appFilter;
+    });
+    list.sort(function(a,b){
+      var da = getAppDeadline(a), db = getAppDeadline(b);
+      if(da && db) return da.localeCompare(db);
+      if(da && !db) return -1;
+      if(!da && db) return 1;
+      return (b.updatedAt||'').localeCompare(a.updatedAt||'');
+    });
 
     if(!list.length){
       document.getElementById('appList').innerHTML = '<div class="empty-state">아직 등록된 지원 내역이 없어요. 캘린더에서 공고를 추가하거나 "+ 새 지원 추가"를 눌러보세요.</div>';
       return;
     }
 
-    document.getElementById('appList').innerHTML = list.map(function(a){
+   document.getElementById('appList').innerHTML = list.map(function(a){
       var meta = STATUS_META[a.status] || STATUS_META['관심등록'];
       var h = hospitalById(a.hospitalId);
       var link = h ? h.link : '';
+      var deadline = getAppDeadline(a);
       var statusOptions = STATUS_LIST.map(function(s){
         return '<option value="'+s+'"'+(s===a.status?' selected':'')+'>'+s+'</option>';
       }).join('');
       return '<div class="app-card" data-id="'+a.id+'">'
         + '<div class="app-card-top">'
-        + '<div><div class="app-hospital">'+escapeHtml(a.hospitalName)+'</div>'
-        + '<div class="app-meta">'+(a.appliedDate?('지원일 '+a.appliedDate):'날짜 미지정')+(a.postingTitle?(' · '+escapeHtml(a.postingTitle)):'')+'</div></div>'
+        + '<div><div class="app-hospital">'+(a.passedScreening?'⭐ ':'')+escapeHtml(a.hospitalName)+'</div>'
+        + '<div class="app-meta">'+(a.appliedDate?('지원일 '+a.appliedDate):'날짜 미지정')+(a.postingTitle?(' · '+escapeHtml(a.postingTitle)):'')+(deadline?(' · 마감 '+deadline):'')+'</div></div>'
         + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+        + '<button class="btn btn-sm" data-toggle-star="'+a.id+'" title="서류합격 여부 표시">'+(a.passedScreening?'★ 서류합격':'☆ 서류합격 표시')+'</button>'
         + '<select class="app-status-select" data-id="'+a.id+'" style="width:auto;font-family:var(--font-mono);font-size:12px;font-weight:600;color:'+meta.c+';background:'+meta.bg+';border-color:transparent;">'+statusOptions+'</select>'
+        + '<button class="btn btn-sm" data-quick-cover="'+a.id+'">📄 자소서 크게보기</button>'
         + (link?('<a class="btn btn-sm" target="_blank" rel="noopener" href="'+escapeHtml(link)+'">공고 링크 ↗</a>'):'')
         + '<button class="btn btn-danger btn-sm" data-del-app="'+a.id+'">삭제</button>'
         + '</div></div>'
@@ -1541,6 +1558,31 @@
       sel.addEventListener('change', function(){
         var a = applications.find(function(x){ return x.id===sel.dataset.id; });
         if(a){ a.status = sel.value; a.updatedAt = new Date().toISOString(); saveApplications(); renderApplications(); renderStats(); showToast('상태를 업데이트했어요'); }
+      });
+    });
+    document.querySelectorAll('[data-toggle-star]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var a = applications.find(function(x){ return x.id===btn.dataset.toggleStar; });
+        if(!a) return;
+        a.passedScreening = !a.passedScreening;
+        saveApplications();
+        renderApplications();
+        showToast(a.passedScreening ? '서류합격 표시했어요' : '서류합격 표시를 해제했어요');
+      });
+    });
+    document.querySelectorAll('[data-quick-cover]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.quickCover;
+        var a = applications.find(function(x){ return x.id===id; });
+        if(!a) return;
+        openBigTextEditor('자기소개서 · '+a.hospitalName, a.coverLetter||'', function(newVal){
+          a.coverLetter = newVal;
+          a.updatedAt = new Date().toISOString();
+          var liveInput = document.querySelector('.app-cover-input[data-id="'+id+'"]');
+          if(liveInput) liveInput.value = newVal;
+          saveApplications();
+          showToast('저장했어요');
+        });
       });
     });
     document.querySelectorAll('.app-save-btn').forEach(function(btn){
@@ -1617,9 +1659,10 @@
         postingTitle: document.getElementById('afTitle').value.trim(),
         appliedDate: document.getElementById('afDate').value,
         status: document.getElementById('afStatus').value,
-        memo: '',
+      memo: '',
         coverLetter: '',
         interviewNotes: '',
+        passedScreening: false,
         updatedAt: new Date().toISOString()
       };
       applications.push(data);
