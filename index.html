@@ -569,12 +569,13 @@
   </div>
 
   <!-- ================= APPLICATIONS ================= -->
-  <div class="view" id="view-applications">
+ <div class="view" id="view-applications">
     <div class="panel panel-pad">
       <div class="cal-head">
-        <div class="app-filters" id="appFilters"></div>
+        <input type="text" id="appSearchInput" placeholder="🔍 검색" style="max-width:240px;">
         <button class="btn btn-primary btn-sm" id="appAddBtn">+ 새 지원 추가</button>
       </div>
+      <div class="app-filters" id="appFilters"></div>
       <div id="appList"></div>
     </div>
   </div>
@@ -790,6 +791,7 @@
   var postings = [];
   var applications = [];
   var appFilter = '전체';
+  var appSearchQuery = '';
   var reviewQueue = [];
   var today = new Date();
   var calYear = today.getFullYear();
@@ -1480,10 +1482,13 @@
   }
 
   /* ================= APPLICATIONS ================= */
-  function renderAppFilters(){
+ function renderAppFilters(){
     var chips = ['전체'].concat(STATUS_LIST);
     document.getElementById('appFilters').innerHTML = chips.map(function(s){
-      return '<button class="filter-chip'+(appFilter===s?' active':'')+'" data-status="'+s+'">'+s+'</button>';
+      var count = (s==='전체')
+        ? applications.filter(function(a){ return a.status !== '불합격'; }).length
+        : applications.filter(function(a){ return a.status === s; }).length;
+      return '<button class="filter-chip'+(appFilter===s?' active':'')+'" data-status="'+s+'">'+s+' ('+count+')</button>';
     }).join('');
     document.querySelectorAll('.filter-chip').forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -1494,6 +1499,14 @@
     });
   }
 
+  var appSearchInputEl = document.getElementById('appSearchInput');
+  if(appSearchInputEl){
+    appSearchInputEl.addEventListener('input', function(){
+      appSearchQuery = appSearchInputEl.value.trim();
+      renderApplications();
+    });
+  }
+
   function getAppDeadline(a){
     var p = a.postingId ? postings.find(function(x){ return x.id === a.postingId; }) : null;
     return (p && p.deadline) ? p.deadline : '';
@@ -1501,9 +1514,11 @@
 
   function renderApplications(){
     renderChatContextOptions();
-    var list = applications.filter(function(a){
-      if(appFilter === '전체') return a.status !== '불합격';
-      return a.status === appFilter;
+   var list = applications.filter(function(a){
+      if(appFilter === '전체'){ if(a.status === '불합격') return false; }
+      else if(a.status !== appFilter){ return false; }
+      if(appSearchQuery && a.hospitalName.toLowerCase().indexOf(appSearchQuery.toLowerCase()) === -1) return false;
+      return true;
     });
    list.sort(function(a,b){
       var da = getAppDeadline(a), db = getAppDeadline(b);
