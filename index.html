@@ -1398,7 +1398,7 @@
     });
   }
 
-  /* ================= TODO LIST ================= */
+  /* ================= TODO LIST ================ */
   function todosForDate(dateStr){
     return todos.filter(function(t){ return t.date === dateStr; })
       .sort(function(a,b){ return (a.createdAt||'').localeCompare(b.createdAt||''); });
