@@ -33,11 +33,13 @@ export default async function handler(req, res) {
   ];
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const systemPrompt = `너는 병원 채용정보를 찾는 도구야. 반드시 순수한 JSON 배열만 출력해. 다른 설명, 인사말, 마크다운 코드블럭(\`\`\`) 없이 JSON만 출력해. 오늘은 ${todayStr}야. 각 항목 형식: {"hospital":"병원명","date":"YYYY-MM-DD","title":"공고 제목","deadline":"YYYY-MM-DD 또는 빈 문자열","link":"공고 링크(반드시 내가 준 그 병원의 링크를 그대로 써)","memo":"한 줄 요약"}. 지원 가능한 임상병리사/진단검사의학과 공고가 없는 병원은 결과에서 그냥 빼줘.`;
+  const systemPrompt = `너는 병원 채용정보를 찾는 도구야. 반드시 순수한 JSON 배열만 출력해. 다른 설명, 인사말, 마크다운 코드블럭(\`\`\`) 없이 JSON만 출력해. 오늘은 ${todayStr}야. 각 항목 형식: {"hospital":"병원명","date":"YYYY-MM-DD","title":"공고 제목","deadline":"YYYY-MM-DD 또는 빈 문자열","link":"검색으로 찾은 실제 공고 페이지 링크","memo":"한 줄 요약"}. 지원 가능한 임상병리사/진단검사의학과 공고가 없는 병원은 결과에서 그냥 빼줘.`;
 
-  const userPrompt = `아래 병원들의 채용페이지 링크를 각각 직접 열어서 확인하고, 그래도 안 열리거나 정보가 부족하면 구글 검색을 보조로 써서, 현재 지원 가능한 임상병리사/진단검사의학과 공고를 찾아줘. 목록:\n` +
-    hospitalList.map(h => `- ${h.name}: ${h.link}`).join('\n');
-
+   const userPrompt = `아래 병원들의 채용정보를 구글에서 검색해서, 현재 지원 가능한 임상병리사/진단검사의학과 공고를 찾아줘. 병원별로 채용 사이트 도메인도 같이 적어뒀으니 그 사이트 위주로 찾아줘. 목록:\n` +
+    hospitalList.map(h => {
+      var domain = h.link.replace(/^https?:\/\//,'').split('/')[0];
+      return `- ${h.name} (site:${domain})`;
+    }).join('\n');
   try {
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -47,7 +49,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: userPrompt }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          tools: [{ google_search: {} }, { url_context: {} }]
+          tools: [{ google_search: {} }]
         })
       }
     );
