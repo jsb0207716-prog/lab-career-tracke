@@ -610,6 +610,7 @@
             돌아온 JSON 코드를 아래 상자에 붙여넣으면 <b>등록 대기열</b>에서 확인 후 캘린더에 추가할 수 있어요.
           </p>
           <button class="btn btn-primary btn-sm" id="autoSearchBtn">🔍 검색 요청 문구 복사하기</button>
+          <button class="btn btn-primary btn-sm" id="manualRunBtn">🚀 자동검색 실행 (10~20초 걸려요)</button>          <button class="btn btn-primary btn-sm" id="manualRunBtn">🚀 지금 바로 자동검색 실행 (10~20초 걸려요)</button>
           <div class="field" style="margin-top:14px;">
             <label for="queueImportArea">검색 결과 JSON 붙여넣기</label>
             <textarea id="queueImportArea" placeholder='[{"hospital":"...","date":"...","title":"...","deadline":"...","link":"...","memo":"..."}]' style="min-height:100px;font-family:var(--font-mono);font-size:12px;"></textarea>
@@ -820,6 +821,7 @@
       아래 주소를 "https://본인프로젝트명.vercel.app/api/chat" 형태로 바꿔주세요 — 끝에 /api/chat 꼭 붙여야 해요) */
   var AI_WORKER_URL = 'https://lab-career-tracke.vercel.app/api/chat';
   var QUEUE_WORKER_URL = 'https://lab-career-tracke.vercel.app/api/get-queue';
+  var MANUAL_SEARCH_URL = 'https://lab-career-tracke.vercel.app/api/manual-search';
 
   var STORAGE_PREFIX = 'labCareerTracker:';
   function getLocal(key, fallback){
@@ -1916,6 +1918,31 @@
       var ta = document.getElementById('manualPromptText');
       ta.select();
       try{ document.execCommand('copy'); showToast('복사했어요'); }catch(e){ showToast('복사에 실패했어요, 직접 선택해서 복사해주세요'); }
+    });
+  }
+
+  var manualRunBtnEl = document.getElementById('manualRunBtn');
+  if(manualRunBtnEl){
+    manualRunBtnEl.addEventListener('click', async function(){
+      manualRunBtnEl.disabled = true;
+      var originalText = manualRunBtnEl.textContent;
+      manualRunBtnEl.textContent = '🔎 검색 중이에요... 잠시만요';
+      showToast('병원들을 검색하고 있어요, 10~20초 정도 걸려요');
+      try{
+        var res = await fetch(MANUAL_SEARCH_URL);
+        var data = await res.json();
+        await fetchAutoQueue();
+        if(data && data.foundThisRun > 0){
+          showToast('검색 완료! ' + data.foundThisRun + '건을 대기열에 담았어요');
+        } else {
+          showToast('검색 완료했지만 새로운 공고는 못 찾았어요');
+        }
+      }catch(e){
+        showToast('검색 중 오류가 발생했어요, 잠시 후 다시 시도해주세요');
+      }finally{
+        manualRunBtnEl.disabled = false;
+        manualRunBtnEl.textContent = originalText;
+      }
     });
   }
 
