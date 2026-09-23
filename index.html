@@ -1529,6 +1529,13 @@
     return (p && p.deadline) ? p.deadline : '';
   }
 
+  function getAppLink(a){
+    var p = a.postingId ? postings.find(function(x){ return x.id === a.postingId; }) : null;
+    if(p && p.link) return p.link;
+    var h = hospitalById(a.hospitalId);
+    return h ? h.link : '';
+  }
+
   function renderApplications(){
     renderChatContextOptions();
    var list = applications.filter(function(a){
@@ -1552,8 +1559,7 @@
 
    document.getElementById('appList').innerHTML = list.map(function(a){
       var meta = STATUS_META[a.status] || STATUS_META['관심등록'];
-      var h = hospitalById(a.hospitalId);
-      var link = h ? h.link : '';
+      var link = getAppLink(a);
       var deadline = getAppDeadline(a);
       var statusOptions = STATUS_LIST.map(function(s){
         return '<option value="'+s+'"'+(s===a.status?' selected':'')+'>'+s+'</option>';
