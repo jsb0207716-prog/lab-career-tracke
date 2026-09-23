@@ -526,6 +526,9 @@
           </div>
           <button class="btn btn-primary btn-sm" id="calAddBtn">+ 공고 직접 추가</button>
         </div>
+        <div style="margin-bottom:14px;">
+          <input type="text" id="calHospitalSearch" placeholder="검색">
+        </div>
         <div class="cal-dow-row" id="calDowRow"></div>
         <div id="calWeeks"></div>
       </div>
@@ -796,6 +799,7 @@
   var today = new Date();
   var calYear = today.getFullYear();
   var calMonth = today.getMonth() + 1; // 1-12
+  var calSearchQuery = '';
   var todos = [];
   var selectedTodoDate = fmtDate(today.getFullYear(), today.getMonth()+1, today.getDate());
   var themeSettings = null;
@@ -1126,12 +1130,19 @@
     var todayStr = fmtDate(today.getFullYear(), today.getMonth()+1, today.getDate());
 
     // build postings with resolved start/end Date objects
-    var items = postings.map(function(p){
+       var items = postings.map(function(p){
       var start = parseDate(p.date);
       var end = p.deadline ? parseDate(p.deadline) : start;
       if(end < start) end = start;
       return {posting:p, start:start, end:end};
     });
+    if(calSearchQuery){
+      items = items.filter(function(it){
+        var h = hospitalById(it.posting.hospitalId);
+        var name = h ? h.name : (it.posting.hospitalName || '');
+        return name.toLowerCase().indexOf(calSearchQuery.toLowerCase()) !== -1;
+      });
+    }
 
     var weeksHtml = '';
     var cursor = gridStart;
@@ -1226,7 +1237,6 @@
       });
     });
 
-    renderCalLegend();
     renderUrgentSidebar();
   }
 
@@ -1355,6 +1365,13 @@
   document.getElementById('calAddBtn').addEventListener('click', function(){
     openPostingModal(null);
   });
+  var calHospitalSearchEl = document.getElementById('calHospitalSearch');
+  if(calHospitalSearchEl){
+    calHospitalSearchEl.addEventListener('input', function(){
+      calSearchQuery = calHospitalSearchEl.value.trim();
+      renderCalendar();
+    });
+  }
 
   function openPostingModal(posting, titleOverride){
     var isEdit = !!(posting && posting.id);
