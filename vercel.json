@@ -3,6 +3,10 @@
   "functions": {
     "api/chat.js": {
       "regions": ["icn1"]
+    },
+    "api/weekly-search.js": {
+      "regions": ["icn1"],
+      "maxDuration": 60
     }
   },
   "crons": [
