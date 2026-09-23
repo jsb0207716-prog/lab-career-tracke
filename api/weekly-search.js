@@ -51,21 +51,27 @@ export default async function handler(req, res) {
         })
       }
     );
-    const geminiData = await geminiRes.json();
+      const geminiData = await geminiRes.json();
     let text = geminiData?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
     text = text.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
 
-      let found = [];
+    let found = [];
     try { found = JSON.parse(text); } catch (e) { found = []; }
     if (!Array.isArray(found)) found = [];
 
-    // 디버그용: AI가 실제로 뭐라고 답했는지 저장해둬요
+    // 디버그용: Gemini가 실제로 뭘 돌려줬는지 통째로 저장해둬요
     await fetch(`${KV_URL}/set/last-debug`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${KV_TOKEN}` },
-      body: JSON.stringify({ rawText: text.slice(0, 3000), foundCount: found.length, ranAt: new Date().toISOString() })
+      body: JSON.stringify({
+        geminiHttpStatus: geminiRes.status,
+        geminiOk: geminiRes.ok,
+        rawText: text.slice(0, 3000),
+        foundCount: found.length,
+        rawGeminiResponse: JSON.stringify(geminiData).slice(0, 3000),
+        ranAt: new Date().toISOString()
+      })
     });
-
     const getRes = await fetch(`${KV_URL}/get/pending-queue`, {
       headers: { Authorization: `Bearer ${KV_TOKEN}` }
     });
