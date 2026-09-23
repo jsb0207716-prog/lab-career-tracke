@@ -4,5 +4,8 @@
     "api/chat.js": {
       "regions": ["icn1"]
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/weekly-search", "schedule": "0 0 * * 1" }
+  ]
 }
