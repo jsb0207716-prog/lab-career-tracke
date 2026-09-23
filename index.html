@@ -819,6 +819,7 @@
      (같이 드린 api/chat.js + vercel.json 파일 + 안내를 참고해서 배포한 뒤,
       아래 주소를 "https://본인프로젝트명.vercel.app/api/chat" 형태로 바꿔주세요 — 끝에 /api/chat 꼭 붙여야 해요) */
   var AI_WORKER_URL = 'https://lab-career-tracke.vercel.app/api/chat';
+  var QUEUE_WORKER_URL = 'https://lab-career-tracke.vercel.app/api/get-queue';
 
   var STORAGE_PREFIX = 'labCareerTracker:';
   function getLocal(key, fallback){
@@ -1850,6 +1851,32 @@
 
   /* ================= AUTO SEARCH / REVIEW QUEUE ================= */
   async function saveReviewQueue(){ await setData('review-queue', reviewQueue); }
+
+  async function fetchAutoQueue(){
+    if(!QUEUE_WORKER_URL) return;
+    try{
+      var res = await fetch(QUEUE_WORKER_URL);
+      if(!res.ok) return;
+      var data = await res.json();
+      var items = Array.isArray(data.items) ? data.items : [];
+      if(!items.length) return;
+      var added = 0;
+      items.forEach(function(item){
+        if(!item || !item.hospital || !item.date) return;
+        reviewQueue.push({
+          id: uid('q'), hospital: item.hospital, date: item.date,
+          deadline: item.deadline || '', title: item.title || '채용공고',
+          link: item.link || '', memo: item.memo || ''
+        });
+        added++;
+      });
+      if(added > 0){
+        await saveReviewQueue();
+        renderReviewQueue();
+        showToast('자동검색으로 새 공고 ' + added + '건을 대기열에 담았어요');
+      }
+    }catch(e){}
+  }
 
   document.getElementById('autoSearchBtn').addEventListener('click', function(){
     var names = hospitals.map(function(h){ return h.name; }).join(', ');
@@ -3077,6 +3104,7 @@ if(charCountPinBtnEl){ charCountPinBtnEl.addEventListener('click', openCharCount
     renderHospitals();
     renderChat();
     renderReviewQueue();
+    fetchAutoQueue();
     renderTodos();
     renderYtPlaylist();
     renderThemeView();
