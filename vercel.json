@@ -7,6 +7,10 @@
     "api/weekly-search.js": {
       "regions": ["icn1"],
       "maxDuration": 60
+    },
+    "api/manual-search.js": {
+      "regions": ["icn1"],
+      "maxDuration": 60
     }
   },
   "crons": [
